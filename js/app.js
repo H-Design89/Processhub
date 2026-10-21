@@ -374,8 +374,8 @@ function bindEventListeners() {
     applyFiltersAndRender();
   });
   DOM.cardFilterStandards.addEventListener('click', () => {
-    AppState.selectedCategory = 'Quy chuẩn';
-    DOM.filterType.value = 'Quy chuẩn';
+    AppState.selectedCategory = 'Tiêu chuẩn';
+    DOM.filterType.value = 'Tiêu chuẩn';
     applyFiltersAndRender();
   });
   DOM.cardFilterInstructions.addEventListener('click', () => {
@@ -881,8 +881,12 @@ function applyFiltersAndRender() {
     }
 
     // 2. Category match
-    if (selectedCat !== 'all' && doc.category !== selectedCat) {
-      return false;
+    if (selectedCat !== 'all') {
+      if (selectedCat === 'Tiêu chuẩn') {
+        if (doc.category !== 'Tiêu chuẩn' && doc.category !== 'Quy chuẩn') return false;
+      } else if (doc.category !== selectedCat) {
+        return false;
+      }
     }
 
     // 3. Favorites only
@@ -944,7 +948,7 @@ function renderMetrics() {
   const processes = accessibleDocs.filter(d => d.category === 'Quy trình').length;
   DOM.statTotalProcesses.textContent = processes;
 
-  const standards = accessibleDocs.filter(d => d.category === 'Quy chuẩn').length;
+  const standards = accessibleDocs.filter(d => d.category === 'Tiêu chuẩn' || d.category === 'Quy chuẩn').length;
   DOM.statTotalStandards.textContent = standards;
 
   const instructions = accessibleDocs.filter(d => d.category === 'Hướng dẫn' || d.category === 'Biểu mẫu').length;
@@ -2112,9 +2116,11 @@ function formatDate(dateStr) {
 function getCategoryClass(category) {
   switch (category) {
     case 'Quy trình': return 'cat-quy-trinh';
-    case 'Quy chuẩn': return 'cat-quy-chuan';
+    case 'Tiêu chuẩn':
+    case 'Quy chuẩn': return 'cat-tieu-chuan';
     case 'Hướng dẫn': return 'cat-huong-dan';
     case 'Biểu mẫu': return 'cat-bieu-mau';
+    case 'Bản vẽ': return 'cat-ban-ve';
     case 'Chính sách': return 'cat-chinh-sach';
     default: return 'cat-quy-trinh';
   }

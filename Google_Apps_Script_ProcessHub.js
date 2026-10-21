@@ -21,9 +21,10 @@ var DEPARTMENTS = [
 
 var CATEGORIES = [
   "Quy trình",
-  "Quy chuẩn",
+  "Tiêu chuẩn",
   "Hướng dẫn",
   "Biểu mẫu",
+  "Bản vẽ",
   "Chính sách"
 ];
 
@@ -89,9 +90,9 @@ function setupProcessHubSheets() {
   // Thêm dữ liệu mẫu Tab 1
   var sampleDataMain = [
     ["QT-TK-01", "Quy trình thiết kế phương án kiến trúc & nội thất", "Bộ phận Kỹ Thuật", "Quy trình", "v3.2", "2026-10-10", "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt VR với CĐT.", "kiến trúc, concept, 3d, brief"],
-    ["QC-BV-02", "Quy chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Quy chuẩn", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
+    ["TC-BV-02", "Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Tiêu chuẩn", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
     ["HD-SX-01", "Hướng dẫn vận hành máy CNC, máy dán cạnh & kiểm soát chất lượng xưởng", "Bộ phận Sản Xuất", "Hướng dẫn", "v2.5", "2026-10-05", "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing", "Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra keo PUR và kiểm tra dao cắt CNC.", "sản xuất, xưởng, cnc, keo pur"],
-    ["QC-AT-01", "Quy chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Quy chuẩn", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
+    ["TC-AT-01", "Tiêu chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Tiêu chuẩn", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
     ["CS-GD-01", "Chính sách bảo mật thông tin nội bộ, quản lý dữ liệu & phân quyền", "Ban Giám Đốc", "Chính sách", "v1.2", "2026-06-30", "https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing", "Quy định phân quyền dữ liệu giữa các bộ phận và cam kết bảo mật NDA.", "bảo mật, chính sách, nda, giám đốc"]
   ];
 
@@ -505,9 +506,9 @@ function setupProcessHubSheetsSilent() {
   if (sheetMain.getLastRow() <= 1) {
     var sampleDataMain = [
       ["QT-TK-01", "Quy trình thiết kế phương án kiến trúc & nội thất", "Bộ phận Kỹ Thuật", "Quy trình", "v3.2", "2026-10-10", "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt VR với CĐT.", "kiến trúc, concept, 3d, brief"],
-      ["QC-BV-02", "Quy chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Quy chuẩn", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
+      ["TC-BV-02", "Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Tiêu chuẩn", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
       ["HD-SX-01", "Hướng dẫn vận hành máy CNC, máy dán cạnh & kiểm soát chất lượng xưởng", "Bộ phận Sản Xuất", "Hướng dẫn", "v2.5", "2026-10-05", "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing", "Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra keo PUR và kiểm tra dao cắt CNC.", "sản xuất, xưởng, cnc, keo pur"],
-      ["QC-AT-01", "Quy chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Quy chuẩn", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
+      ["TC-AT-01", "Tiêu chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Tiêu chuẩn", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
       ["CS-GD-01", "Chính sách bảo mật thông tin nội bộ, quản lý dữ liệu & phân quyền", "Ban Giám Đốc", "Chính sách", "v1.2", "2026-06-30", "https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing", "Quy định phân quyền dữ liệu giữa các bộ phận và cam kết bảo mật NDA.", "bảo mật, chính sách, nda, giám đốc"]
     ];
     sheetMain.getRange(2, 1, sampleDataMain.length, sampleDataMain[0].length).setValues(sampleDataMain);

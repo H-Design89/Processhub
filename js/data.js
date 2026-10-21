@@ -53,15 +53,27 @@ const DEFAULT_MOCK_DOCUMENTS = [
   },
   {
     id: "doc-2",
-    code: "QC-BV-02",
-    title: "Quy chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)",
+    code: "TC-BV-02",
+    title: "Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)",
     department: "Bộ phận Kỹ Thuật",
-    category: "Quy chuẩn",
+    category: "Tiêu chuẩn",
     version: "v2.0",
     updatedAt: "2026-09-25",
     driveUrl: "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing",
     description: "Bộ tiêu chuẩn nét vẽ, tỷ lệ, ký hiệu vật liệu, quy cách đóng khung tên bản vẽ cho toàn bộ kiến trúc sư và họa viên tại H-Design.",
     tags: ["bản vẽ", "cad", "revit", "tiêu chuẩn nét", "khung tên", "hồ sơ thi công"]
+  },
+  {
+    id: "doc-bv-01",
+    code: "BV-TK-01",
+    title: "Bộ bản vẽ thiết kế thi công điển hình & chi tiết cấu tạo nội thất",
+    department: "Bộ phận Kỹ Thuật",
+    category: "Bản vẽ",
+    version: "v1.0",
+    updatedAt: "2026-10-18",
+    driveUrl: "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing",
+    description: "Tập hợp bản vẽ mặt bằng bố trí công năng, mặt cắt chi tiết đồ gỗ nội thất, chi tiết liên kết kim loại và bản vẽ kỹ thuật xưởng sản xuất H-Design.",
+    tags: ["bản vẽ", "cad", "chi tiết cấu tạo", "mặt bằng", "kỹ thuật"]
   },
   {
     id: "doc-3",
@@ -125,10 +137,10 @@ const DEFAULT_MOCK_DOCUMENTS = [
   },
   {
     id: "doc-8",
-    code: "QC-AT-01",
-    title: "Quy chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC tại phân xưởng",
+    code: "TC-AT-01",
+    title: "Tiêu chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC tại phân xưởng",
     department: "Bộ phận Sản Xuất",
-    category: "Quy chuẩn",
+    category: "Tiêu chuẩn",
     version: "v3.0",
     updatedAt: "2026-07-20",
     driveUrl: "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing",
@@ -981,6 +993,13 @@ const DataStore = {
             d.department === 'Tài Chính - Kế Toán'
           );
           if (!hasOutdatedDept) {
+            // Tự động chuyển đổi các tài liệu loại "Quy chuẩn" sang "Tiêu chuẩn"
+            parsed.forEach(d => {
+              if (d.category === 'Quy chuẩn') {
+                d.category = 'Tiêu chuẩn';
+              }
+            });
+
             // Đảm bảo tài liệu HD-SX-03 (Gắn tem inox) luôn có mặt kể cả khi dùng cache cũ
             const hasTemInox = parsed.some(d => (d.code || '').toUpperCase() === 'HD-SX-03' || (d.title || '').includes('TEM INOX'));
             if (!hasTemInox) {
@@ -989,6 +1008,16 @@ const DataStore = {
                 parsed = [temDoc, ...parsed];
               }
             }
+
+            // Đảm bảo có ít nhất 1 tài liệu mẫu loại "Bản vẽ" nếu chưa có
+            const hasBanVe = parsed.some(d => d.category === 'Bản vẽ');
+            if (!hasBanVe) {
+              const bvDoc = DEFAULT_MOCK_DOCUMENTS.find(d => d.category === 'Bản vẽ');
+              if (bvDoc) {
+                parsed.push(bvDoc);
+              }
+            }
+
             return parsed;
           }
         }
