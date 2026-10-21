@@ -1168,11 +1168,30 @@ const DataStore = {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const resJson = await response.json().catch(() => null);
+      const rawText = await response.text();
+      let resJson = null;
+      try {
+        resJson = JSON.parse(rawText);
+      } catch (e) {
+        // Response is HTML or plain error text
+      }
+
+      if (!resJson || resJson.status === 'error') {
+        const isMissingDoPost = rawText.includes('doPost') || rawText.includes('Không tìm thấy hàm tập lệnh');
+        const errMsg = (resJson && resJson.message) ? resJson.message : 
+          (isMissingDoPost ? 'Google Apps Script chưa triển khai Phiên bản mới chứa hàm doPost.' : 'Máy chủ Google Apps Script trả về lỗi.');
+        return {
+          synced: false,
+          isWebApp: true,
+          error: errMsg,
+          message: `Đã lưu trên ProcessHub, nhưng chưa thể ghi vào Google Sheet: ${errMsg}`
+        };
+      }
+
       return {
         synced: true,
         isWebApp: true,
-        message: (resJson && resJson.message) ? resJson.message : `Đã thêm thành công [${doc.code}] vào Google Sheet!`
+        message: resJson.message || `Đã thêm thành công [${doc.code}] vào Google Sheet!`
       };
     } catch (err) {
       console.warn('Lỗi khi gửi dữ liệu lên Google Apps Script:', err);
@@ -1257,11 +1276,30 @@ const DataStore = {
         throw new Error(`HTTP ${response.status}`);
       }
 
-      const resJson = await response.json().catch(() => null);
+      const rawText = await response.text();
+      let resJson = null;
+      try {
+        resJson = JSON.parse(rawText);
+      } catch (e) {
+        // Response is HTML or plain error text
+      }
+
+      if (!resJson || resJson.status === 'error') {
+        const isMissingDoPost = rawText.includes('doPost') || rawText.includes('Không tìm thấy hàm tập lệnh');
+        const errMsg = (resJson && resJson.message) ? resJson.message : 
+          (isMissingDoPost ? 'Google Apps Script chưa triển khai Phiên bản mới chứa hàm doPost.' : 'Máy chủ Google Apps Script trả về lỗi.');
+        return {
+          synced: false,
+          isWebApp: true,
+          error: errMsg,
+          message: `Đã cập nhật trên ProcessHub, nhưng chưa thể ghi vào Google Sheet: ${errMsg}`
+        };
+      }
+
       return {
         synced: true,
         isWebApp: true,
-        message: (resJson && resJson.message) ? resJson.message : `Đã cập nhật thành công [${updatedDoc.code}] trên Google Sheet!`
+        message: resJson.message || `Đã cập nhật thành công [${updatedDoc.code}] trên Google Sheet!`
       };
     } catch (err) {
       console.warn('Lỗi khi gửi cập nhật lên Google Apps Script:', err);

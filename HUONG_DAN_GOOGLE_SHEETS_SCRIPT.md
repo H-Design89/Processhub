@@ -57,8 +57,25 @@ Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Scrip
 
 ---
 
-## 🔗 Bước Cuối: Kết Nối Google Sheet Vào Web ProcessHub
-1. Trên Google Sheets, bấm nút **Chia sẻ (Share)** góc trên bên phải ➔ Quyền truy cập chung: **"Bất kỳ ai có đường liên kết đều có thể xem" (Viewer)**.
-2. Sao chép đường link Google Sheets.
-3. Mở phần mềm **ProcessHub**, bấm nút **"Cài đặt" (Bánh răng)** ➔ Dán link vào và bấm **"Lưu & Đồng bộ ngay"**.
-4. Toàn bộ quy trình và lịch sử phiên bản sẽ hiển thị lên web ngay tức thì!
+---
+
+## 🌐 Triển Khai Web App Để Ghi Tự Động Từ Web Vào Google Sheets
+
+Để khi bạn bấm **"Thêm tài liệu mới"** hoặc **"Sửa link"** trên Web ProcessHub, thông tin **tự động ghi thẳng vào Google Sheet**:
+
+1. Tại cửa sổ **Apps Script**, bấm nút xanh **Triển khai (Deploy)** ở góc trên bên phải.
+2. Chọn **Quản lý bản triển khai (Manage deployments)** *(hoặc Bản triển khai mới nếu làm lần đầu)*.
+3. Bấm vào biểu tượng **✏️ Cây bút chì (Chỉnh sửa)** bên cạnh bản triển khai hiện tại:
+   - **Phiên bản (Version):** Chọn **Phiên bản mới (New version)** *(⚠️ Bắt buộc mỗi khi cập nhật code để Google nạp các hàm mới như `doPost`)*.
+   - **Người thực thi (Execute as):** Chọn **Tôi (Me)**.
+   - **Người có quyền truy cập (Who has access):** Chọn **Bất kỳ ai (Anyone)**.
+4. Bấm **Triển khai (Deploy)**.
+5. Sao chép đường link Web App (có đuôi `/exec`) và gắn vào ProcessHub.
+
+---
+
+## 🔗 Kết Nối Google Sheet Vào Web ProcessHub
+1. Mở phần mềm **ProcessHub**, bấm nút **"Cài đặt" (Bánh răng)** ở thanh điều hướng.
+2. Dán đường link Web App (hoặc link chia sẻ Google Sheets) vào ô cấu hình.
+3. Bấm **"Lưu & Đồng bộ ngay"**. Toàn bộ quy trình và lịch sử phiên bản sẽ tự động liên kết 2 chiều!
+
