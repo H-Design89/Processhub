@@ -182,114 +182,112 @@ a {
   letter-spacing: 0.02em;
 }
 
-/* Google Sheets Sync Cloud Button in Navigation Bar (Icon Only) */
-.nav-sync-cloud-btn,
-.nav-sync-cloud-chip {
+/* Google Sheets Sync Cloud Button in Navigation Bar (Premium SVG Cloud) */
+.nav-sync-cloud-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.55rem;
-  min-width: 40px;
+  padding: 0.5rem;
+  width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid var(--border-subtle);
   background: var(--bg-tertiary);
-  color: var(--text-main);
   transition: all var(--transition-fast);
   user-select: none;
-}
-
-.nav-sync-cloud-btn .sync-cloud-icon,
-.nav-sync-cloud-chip .sync-cloud-icon {
-  width: 19px;
-  height: 19px;
   flex-shrink: 0;
-  transition: color var(--transition-fast), stroke var(--transition-fast), transform var(--transition-fast);
 }
 
-/* Synced State: Cloud icon is Blue (#0284C7 / #38BDF8) */
-.nav-sync-cloud-btn.is-synced,
-.nav-sync-cloud-chip.is-synced {
+.nav-sync-cloud-btn .sync-cloud-svg {
+  width: 22px;
+  height: 22px;
+  transition: transform var(--transition-fast);
+}
+
+.nav-sync-cloud-btn .cloud-shape {
+  transition: stroke var(--transition-fast), fill var(--transition-fast);
+}
+
+.nav-sync-cloud-btn .cloud-check-mark {
+  transition: stroke var(--transition-fast), opacity var(--transition-fast);
+}
+
+/* Synced State: Vibrant Blue Cloud (#0284C7 / #38BDF8) */
+.nav-sync-cloud-btn.is-synced {
   background: rgba(2, 132, 199, 0.08);
-  border-color: rgba(2, 132, 199, 0.3);
+  border-color: rgba(2, 132, 199, 0.32);
 }
 
-[data-theme="dark"] .nav-sync-cloud-btn.is-synced,
-[data-theme="dark"] .nav-sync-cloud-chip.is-synced {
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced {
   background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
-.nav-sync-cloud-btn.is-synced .sync-cloud-icon,
-.nav-sync-cloud-btn.is-synced svg.sync-cloud-icon,
-.nav-sync-cloud-chip.is-synced .sync-cloud-icon,
-.nav-sync-cloud-chip.is-synced svg.sync-cloud-icon {
-  color: #0284c7 !important;
-  stroke: #0284c7 !important;
+.nav-sync-cloud-btn.is-synced .cloud-shape {
+  stroke: #0284c7;
+  fill: url(#cloudBlueGrad);
 }
 
-[data-theme="dark"] .nav-sync-cloud-btn.is-synced .sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-btn.is-synced svg.sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-chip.is-synced .sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-chip.is-synced svg.sync-cloud-icon {
-  color: #38bdf8 !important;
-  stroke: #38bdf8 !important;
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced .cloud-shape {
+  stroke: #38bdf8;
+  fill: rgba(56, 189, 248, 0.22);
 }
 
-/* Not Synced State: Cloud icon is Gray (#9CA3AF) */
-.nav-sync-cloud-btn.not-synced,
-.nav-sync-cloud-chip.not-synced {
+.nav-sync-cloud-btn.is-synced .cloud-check-mark {
+  stroke: #0284c7;
+  opacity: 1;
+}
+
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced .cloud-check-mark {
+  stroke: #38bdf8;
+}
+
+/* Not Synced State: Elegant Slate Gray Cloud (#9CA3AF) */
+.nav-sync-cloud-btn.not-synced {
   background: rgba(156, 163, 175, 0.08);
   border-color: rgba(156, 163, 175, 0.25);
 }
 
-[data-theme="dark"] .nav-sync-cloud-btn.not-synced,
-[data-theme="dark"] .nav-sync-cloud-chip.not-synced {
+[data-theme="dark"] .nav-sync-cloud-btn.not-synced {
   background: rgba(156, 163, 175, 0.1);
   border-color: rgba(156, 163, 175, 0.25);
 }
 
-.nav-sync-cloud-btn.not-synced .sync-cloud-icon,
-.nav-sync-cloud-btn.not-synced svg.sync-cloud-icon,
-.nav-sync-cloud-chip.not-synced .sync-cloud-icon,
-.nav-sync-cloud-chip.not-synced svg.sync-cloud-icon {
-  color: #9ca3af !important;
-  stroke: #9ca3af !important;
+.nav-sync-cloud-btn.not-synced .cloud-shape {
+  stroke: #9ca3af;
+  fill: url(#cloudGrayGrad);
 }
 
-[data-theme="dark"] .nav-sync-cloud-btn.not-synced .sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-btn.not-synced svg.sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-chip.not-synced .sync-cloud-icon,
-[data-theme="dark"] .nav-sync-cloud-chip.not-synced svg.sync-cloud-icon {
-  color: #9ca3af !important;
-  stroke: #9ca3af !important;
+[data-theme="dark"] .nav-sync-cloud-btn.not-synced .cloud-shape {
+  stroke: #9ca3af;
+  fill: rgba(156, 163, 175, 0.12);
+}
+
+.nav-sync-cloud-btn.not-synced .cloud-check-mark {
+  stroke: #9ca3af;
+  opacity: 0;
 }
 
 /* Hover effects */
-.nav-sync-cloud-btn:hover,
-.nav-sync-cloud-chip:hover {
+.nav-sync-cloud-btn:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
 }
 
-.nav-sync-cloud-btn.is-synced:hover,
-.nav-sync-cloud-chip.is-synced:hover {
+.nav-sync-cloud-btn.is-synced:hover {
   background: rgba(2, 132, 199, 0.16);
   border-color: #0284c7;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
 }
 
-.nav-sync-cloud-btn.not-synced:hover,
-.nav-sync-cloud-chip.not-synced:hover {
+.nav-sync-cloud-btn.not-synced:hover {
   background: rgba(156, 163, 175, 0.18);
   border-color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.2);
 }
 
 /* Syncing animation */
-.nav-sync-cloud-btn.is-syncing .sync-cloud-icon,
-.nav-sync-cloud-btn.is-syncing svg.sync-cloud-icon,
-.nav-sync-cloud-chip.is-syncing .sync-cloud-icon,
-.nav-sync-cloud-chip.is-syncing svg.sync-cloud-icon {
+.nav-sync-cloud-btn.is-syncing .sync-cloud-svg {
   animation: pulse-cloud-sync 1.2s infinite ease-in-out;
 }
 
@@ -299,8 +297,8 @@ a {
     opacity: 1;
   }
   50% {
-    transform: scale(1.22);
-    opacity: 0.5;
+    transform: scale(1.15);
+    opacity: 0.6;
   }
 }
 

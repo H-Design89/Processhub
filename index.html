@@ -37,9 +37,22 @@
       </div>
 
       <div class="nav-right">
-        <!-- Google Sheets Sync Status & Trigger (Icon Only) -->
+        <!-- Google Sheets Sync Status & Trigger (Premium Cloud Icon) -->
         <button id="btn-sync-data" class="nav-action-btn icon-only nav-sync-cloud-btn is-synced" title="Đã đồng bộ Google Sheets (Bấm để làm mới dữ liệu)">
-          <i data-lucide="cloud" id="nav-sync-cloud-icon" class="sync-cloud-icon"></i>
+          <svg id="nav-sync-cloud-icon" class="sync-cloud-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="cloudBlueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#0284C7" stop-opacity="0.15"/>
+              </linearGradient>
+              <linearGradient id="cloudGrayGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#9CA3AF" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#6B7280" stop-opacity="0.1"/>
+              </linearGradient>
+            </defs>
+            <path class="cloud-shape" d="M6.5 18h11a4.5 4.5 0 0 0 .5-8.97 6 6 0 0 0-10.8 1.47A4.5 4.5 0 0 0 6.5 18z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path class="cloud-check-mark" d="m9.5 13.5 2 2 4-4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
 
         <!-- System Settings Trigger (Gear Icon) -->

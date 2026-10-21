@@ -760,7 +760,6 @@ async function loadInitialData() {
 function updateDataStatusBadge(isOnline, text) {
   const statusText = document.getElementById('data-status-text') || DOM.dataStatusText;
   const syncBtn = document.getElementById('btn-sync-data') || DOM.btnSyncData;
-  const cloudIcon = document.getElementById('nav-sync-cloud-icon');
 
   if (statusText && text) {
     statusText.textContent = text;
@@ -779,24 +778,12 @@ function updateDataStatusBadge(isOnline, text) {
     if (isSyncing) {
       syncBtn.classList.add('not-synced', 'is-syncing');
       syncBtn.setAttribute('title', 'Đang đồng bộ dữ liệu từ Google Sheets...');
-      if (cloudIcon) {
-        cloudIcon.style.color = '#9CA3AF';
-        cloudIcon.style.stroke = '#9CA3AF';
-      }
     } else if (isSynced) {
       syncBtn.classList.add('is-synced');
       syncBtn.setAttribute('title', 'Đã đồng bộ Google Sheets (Bấm để làm mới dữ liệu)');
-      if (cloudIcon) {
-        cloudIcon.style.color = '#0284C7';
-        cloudIcon.style.stroke = '#0284C7';
-      }
     } else {
       syncBtn.classList.add('not-synced');
       syncBtn.setAttribute('title', 'Chưa đồng bộ Google Sheets (Bấm để thử kết nối lại)');
-      if (cloudIcon) {
-        cloudIcon.style.color = '#9CA3AF';
-        cloudIcon.style.stroke = '#9CA3AF';
-      }
     }
   }
 }
