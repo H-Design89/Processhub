@@ -700,10 +700,15 @@ async function loadInitialData() {
     try {
       updateDataStatusBadge(false, 'Đang đồng bộ Google Sheets...');
       const docs = await fetchGoogleSheetData(sheetConfig.sheetId, sheetConfig.tabName);
-      AppState.allDocuments = docs;
-      DataStore.setDocuments(docs);
-      updateDataStatusBadge(true, 'Đã đồng bộ Google Sheets');
-      showToast(`Đã đồng bộ thành công ${docs.length} tài liệu từ Google Sheets!`, 'success');
+      if (docs && docs.length > 0) {
+        AppState.allDocuments = docs;
+        DataStore.setDocuments(docs);
+        updateDataStatusBadge(true, 'Đã đồng bộ Google Sheets');
+        showToast(`Đã đồng bộ thành công ${docs.length} tài liệu từ Google Sheets!`, 'success');
+      } else {
+        AppState.allDocuments = DataStore.getDocuments();
+        updateDataStatusBadge(true, 'Dữ liệu chuẩn H-Design');
+      }
     } catch (err) {
       console.warn('Không thể đồng bộ Google Sheet ngay lúc này, dùng cache:', err);
       AppState.allDocuments = DataStore.getDocuments();

@@ -362,33 +362,74 @@ function doGet(e) {
     var sheetMain = ss.getSheetByName('QuyTrinhHienHanh');
     var sheetHistory = ss.getSheetByName('LichSuPhienBan');
 
-    // Nếu chưa có tab thì tự động tạo cấu trúc cơ bản
-    if (!sheetMain || !sheetHistory) {
-      setupProcessHubSheetsSilent();
-      sheetMain = ss.getSheetByName('QuyTrinhHienHanh');
-      sheetHistory = ss.getSheetByName('LichSuPhienBan');
+    // Nếu không tìm thấy tab 'QuyTrinhHienHanh' hoặc tab đó trống (< 2 dòng):
+    if (!sheetMain || sheetMain.getLastRow() < 2) {
+      var allSheets = ss.getSheets();
+      for (var s = 0; s < allSheets.length; s++) {
+        var sName = allSheets[s].getName().toLowerCase();
+        if (sName !== 'lichsuphienban' && allSheets[s].getLastRow() >= 2) {
+          sheetMain = allSheets[s];
+          break;
+        }
+      }
     }
 
     var documents = [];
     if (sheetMain && sheetMain.getLastRow() >= 2) {
       var dataMain = sheetMain.getDataRange().getValues();
+      var headers = (dataMain[0] || []).map(function(h) { return (h || '').toString().toLowerCase().trim(); });
+
+      var colCode = -1, colTitle = -1, colDept = -1, colCat = -1, colVer = -1, colDate = -1, colDrive = -1, colDesc = -1, colTags = -1;
+      for (var c = 0; c < headers.length; c++) {
+        var h = headers[c];
+        if (colCode === -1 && (h.indexOf('mã') >= 0 || h.indexOf('code') >= 0)) colCode = c;
+        else if (colTitle === -1 && (h.indexOf('tên') >= 0 || h.indexOf('tiêu đề') >= 0 || h.indexOf('title') >= 0 || h.indexOf('quy trình') >= 0)) colTitle = c;
+        else if (colDept === -1 && (h.indexOf('phòng') >= 0 || h.indexOf('bộ phận') >= 0 || h.indexOf('dept') >= 0)) colDept = c;
+        else if (colCat === -1 && (h.indexOf('loại') >= 0 || h.indexOf('phân loại') >= 0 || h.indexOf('thể loại') >= 0 || h.indexOf('cat') >= 0)) colCat = c;
+        else if (colVer === -1 && (h.indexOf('phiên bản') >= 0 || h.indexOf('version') >= 0)) colVer = c;
+        else if (colDate === -1 && (h.indexOf('ngày') >= 0 || h.indexOf('date') >= 0)) colDate = c;
+        else if (colDrive === -1 && (h.indexOf('drive') >= 0 || h.indexOf('link') >= 0 || h.indexOf('url') >= 0)) colDrive = c;
+        else if (colDesc === -1 && (h.indexOf('mô tả') >= 0 || h.indexOf('tóm tắt') >= 0 || h.indexOf('desc') >= 0)) colDesc = c;
+        else if (colTags === -1 && (h.indexOf('từ khóa') >= 0 || h.indexOf('tag') >= 0)) colTags = c;
+      }
+
+      // Default index fallbacks nếu không nhận diện được qua header
+      if (colCode === -1) colCode = 0;
+      if (colTitle === -1) colTitle = 1;
+      if (colDept === -1) colDept = 2;
+      if (colCat === -1) colCat = 3;
+      if (colVer === -1) colVer = 4;
+      if (colDate === -1) colDate = 5;
+      if (colDrive === -1) colDrive = 6;
+      if (colDesc === -1) colDesc = 7;
+      if (colTags === -1) colTags = 8;
+
       for (var i = 1; i < dataMain.length; i++) {
         var row = dataMain[i];
-        var code = (row[0] || '').toString().trim();
-        var title = (row[1] || '').toString().trim();
+        var code = (row[colCode] || '').toString().trim();
+        var title = (row[colTitle] || '').toString().trim();
+
+        // Tự động hoán đổi nếu người dùng nhập tiêu đề dài vào cột Mã
+        if (!title && code.length > 10) {
+          title = code;
+          code = 'DOC-' + i;
+        } else if (!title && code) {
+          title = code;
+        }
+
         if (!title) continue;
 
         documents.push({
-          id: 'sheet-' + i + '-' + code.replace(/[^a-zA-Z0-9]/g, ''),
+          id: 'sheet-' + i + '-' + (code || ('doc-' + i)).replace(/[^a-zA-Z0-9]/g, ''),
           code: code || ('DOC-' + i),
           title: title,
-          department: (row[2] || 'Chung').toString().trim(),
-          category: (row[3] || 'Quy trình').toString().trim(),
-          version: (row[4] || 'v1.0').toString().trim(),
-          updatedAt: formatDateIso(row[5]),
-          driveUrl: (row[6] || '').toString().trim(),
-          description: (row[7] || '').toString().trim(),
-          tags: (row[8] || '').toString().split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(Boolean)
+          department: (row[colDept] || 'Bộ phận Sản Xuất').toString().trim(),
+          category: (row[colCat] || 'Hướng dẫn').toString().trim(),
+          version: (row[colVer] || 'v1.0').toString().trim(),
+          updatedAt: formatDateIso(row[colDate]),
+          driveUrl: (row[colDrive] || '').toString().trim(),
+          description: (row[colDesc] || '').toString().trim(),
+          tags: (row[colTags] || '').toString().split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(Boolean)
         });
       }
     }

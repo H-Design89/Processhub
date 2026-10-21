@@ -19,8 +19,26 @@ const STORAGE_KEYS = {
 // Default NotebookLM AI Assistant Link (Sẽ gắn link chính thức của H-Design khi bạn chia sẻ)
 const DEFAULT_NOTEBOOKLM_URL = '';
 
+// Default Google Apps Script Web App URL (Tự động đồng bộ với Google Sheets của H-Design)
+const DEFAULT_SHEET_CONFIG = {
+  sheetId: 'https://script.google.com/macros/s/AKfycbxuIDFM_Ks9C6aVhMVAhTMjiKwztiHTVZrLeB2ZdieweWFteerKN60e5C71R1K1oP3w1g/exec',
+  tabName: 'QuyTrinhHienHanh'
+};
+
 // Rich Sample Data (Mapped to H-Design's 5 Core Departments)
 const DEFAULT_MOCK_DOCUMENTS = [
+  {
+    id: "doc-tem-inox",
+    code: "HD-SX-03",
+    title: "HƯỚNG DẪN THAO TÁC GẮN TEM INOX LÊN TỦ ĐÔNG",
+    department: "Bộ phận Sản Xuất",
+    category: "Hướng dẫn",
+    version: "v1.0",
+    updatedAt: "2026-10-21",
+    driveUrl: "https://drive.google.com/",
+    description: "Quy chuẩn thao tác vệ sinh bề mặt tủ đông bằng cồn công nghiệp, căn chỉnh thước đo định vị góc gắn tem, bóc dán băng keo chuyên dụng và nghiệm thu độ phẳng - độ bám dính trước khi đóng gói bao bì xuất xưởng.",
+    tags: ["tem inox", "tủ đông", "gắn tem", "sản xuất", "hướng dẫn", "hoàn thiện", "kiểm tra chất lượng"]
+  },
   {
     id: "doc-1",
     code: "QT-TK-01",
@@ -169,6 +187,18 @@ const DEFAULT_MOCK_DOCUMENTS = [
 
 // Rich Default Version History (Mapped to Google Sheets Tab: LichSuPhienBan)
 const DEFAULT_VERSION_HISTORY = [
+  // HD-SX-03 History
+  {
+    code: "HD-SX-03",
+    version: "v1.0",
+    releaseDate: "2026-10-21",
+    deprecatedDate: "Đang áp dụng",
+    status: "active",
+    author: "Bộ phận Sản Xuất",
+    reason: "Ban hành hướng dẫn chuẩn quy trình thao tác gắn tem inox hoàn thiện tủ đông tiêu chuẩn H-Design.",
+    driveUrl: "https://drive.google.com/",
+    notes: "Bản ban hành chính thức"
+  },
   // QT-TK-01 History
   {
     code: "QT-TK-01",
@@ -941,7 +971,7 @@ const DataStore = {
     try {
       const cached = localStorage.getItem(STORAGE_KEYS.DOCUMENTS_CACHE);
       if (cached) {
-        const parsed = JSON.parse(cached);
+        let parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
           // If cached documents still contain outdated department names, fallback to new mock defaults
           const hasOutdatedDept = parsed.some(d => 
@@ -951,6 +981,14 @@ const DataStore = {
             d.department === 'Tài Chính - Kế Toán'
           );
           if (!hasOutdatedDept) {
+            // Đảm bảo tài liệu HD-SX-03 (Gắn tem inox) luôn có mặt kể cả khi dùng cache cũ
+            const hasTemInox = parsed.some(d => (d.code || '').toUpperCase() === 'HD-SX-03' || (d.title || '').includes('TEM INOX'));
+            if (!hasTemInox) {
+              const temDoc = DEFAULT_MOCK_DOCUMENTS.find(d => d.code === 'HD-SX-03');
+              if (temDoc) {
+                parsed = [temDoc, ...parsed];
+              }
+            }
             return parsed;
           }
         }
@@ -1032,10 +1070,14 @@ const DataStore = {
   getSheetConfig() {
     try {
       const config = localStorage.getItem(STORAGE_KEYS.SHEET_CONFIG);
-      return config ? JSON.parse(config) : null;
+      if (config) {
+        const parsed = JSON.parse(config);
+        if (parsed && parsed.sheetId) return parsed;
+      }
     } catch (e) {
-      return null;
+      // ignore
     }
+    return (typeof DEFAULT_SHEET_CONFIG !== 'undefined' && DEFAULT_SHEET_CONFIG && DEFAULT_SHEET_CONFIG.sheetId) ? DEFAULT_SHEET_CONFIG : null;
   },
 
   setSheetConfig(config) {
