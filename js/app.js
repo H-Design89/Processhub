@@ -651,15 +651,12 @@ function bindEventListeners() {
  * Open NotebookLM AI Assistant (Strictly opens AI in a new tab)
  */
 function openAiAssistant() {
-  const customUrl = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL) || (typeof DEFAULT_NOTEBOOKLM_URL !== 'undefined' ? DEFAULT_NOTEBOOKLM_URL : '');
-  const targetUrl = (customUrl && customUrl.trim()) ? customUrl.trim() : 'https://notebooklm.google.com/';
+  const storedUrl = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL);
+  const defaultUrl = (typeof DEFAULT_NOTEBOOKLM_URL !== 'undefined') ? DEFAULT_NOTEBOOKLM_URL : '';
+  const targetUrl = (storedUrl && storedUrl.includes('/notebook/')) ? storedUrl.trim() : defaultUrl || 'https://notebooklm.google.com/';
 
   window.open(targetUrl, '_blank');
-  if (customUrl && customUrl.trim()) {
-    showToast('Đang mở sổ tay Trợ lý AI NotebookLM H-Design...', 'info');
-  } else {
-    showToast('Đang mở Google NotebookLM (Gắn link sổ tay dự án trong nút Cài đặt ⚙️)', 'info');
-  }
+  showToast('Đang mở sổ tay Trợ lý AI NotebookLM H-Design...', 'info');
 }
 
 /**

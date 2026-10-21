@@ -16,8 +16,8 @@ const STORAGE_KEYS = {
   NOTEBOOKLM_URL: 'processhub_notebooklm_url'
 };
 
-// Default NotebookLM AI Assistant Link (Sẽ gắn link chính thức của H-Design khi bạn chia sẻ)
-const DEFAULT_NOTEBOOKLM_URL = '';
+// Default NotebookLM AI Assistant Link (Sổ tay Trợ lý AI chính thức của H-Design)
+const DEFAULT_NOTEBOOKLM_URL = 'https://notebooklm.google.com/notebook/238a94aa-0f51-468f-8e40-84d5628f3a4f';
 
 // Default Google Apps Script Web App URL (Tự động đồng bộ với Google Sheets của H-Design)
 const DEFAULT_SHEET_CONFIG = {
