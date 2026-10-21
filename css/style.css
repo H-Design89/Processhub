@@ -182,50 +182,55 @@ a {
   letter-spacing: 0.02em;
 }
 
-/* Google Sheets Sync Cloud Chip in Navigation Bar */
+/* Google Sheets Sync Cloud Button in Navigation Bar (Icon Only) */
+.nav-sync-cloud-btn,
 .nav-sync-cloud-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.52rem 0.95rem;
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  font-weight: 600;
+  justify-content: center;
+  padding: 0.55rem;
+  min-width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   border: 1px solid var(--border-subtle);
   background: var(--bg-tertiary);
   color: var(--text-main);
   transition: all var(--transition-fast);
   user-select: none;
-  line-height: 1.2;
 }
 
+.nav-sync-cloud-btn .sync-cloud-icon,
 .nav-sync-cloud-chip .sync-cloud-icon {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   flex-shrink: 0;
   transition: color var(--transition-fast), stroke var(--transition-fast), transform var(--transition-fast);
 }
 
 /* Synced State: Cloud icon is Blue (#0284C7 / #38BDF8) */
+.nav-sync-cloud-btn.is-synced,
 .nav-sync-cloud-chip.is-synced {
   background: rgba(2, 132, 199, 0.08);
-  border-color: rgba(2, 132, 199, 0.28);
-  color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.3);
 }
 
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced,
 [data-theme="dark"] .nav-sync-cloud-chip.is-synced {
   background: rgba(56, 189, 248, 0.12);
   border-color: rgba(56, 189, 248, 0.35);
-  color: #7dd3fc;
 }
 
+.nav-sync-cloud-btn.is-synced .sync-cloud-icon,
+.nav-sync-cloud-btn.is-synced svg.sync-cloud-icon,
 .nav-sync-cloud-chip.is-synced .sync-cloud-icon,
 .nav-sync-cloud-chip.is-synced svg.sync-cloud-icon {
   color: #0284c7 !important;
   stroke: #0284c7 !important;
 }
 
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced .sync-cloud-icon,
+[data-theme="dark"] .nav-sync-cloud-btn.is-synced svg.sync-cloud-icon,
 [data-theme="dark"] .nav-sync-cloud-chip.is-synced .sync-cloud-icon,
 [data-theme="dark"] .nav-sync-cloud-chip.is-synced svg.sync-cloud-icon {
   color: #38bdf8 !important;
@@ -233,24 +238,28 @@ a {
 }
 
 /* Not Synced State: Cloud icon is Gray (#9CA3AF) */
+.nav-sync-cloud-btn.not-synced,
 .nav-sync-cloud-chip.not-synced {
-  background: rgba(156, 163, 175, 0.1);
-  border-color: rgba(156, 163, 175, 0.28);
-  color: #6b7280;
+  background: rgba(156, 163, 175, 0.08);
+  border-color: rgba(156, 163, 175, 0.25);
 }
 
+[data-theme="dark"] .nav-sync-cloud-btn.not-synced,
 [data-theme="dark"] .nav-sync-cloud-chip.not-synced {
-  background: rgba(156, 163, 175, 0.12);
-  border-color: rgba(156, 163, 175, 0.28);
-  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.1);
+  border-color: rgba(156, 163, 175, 0.25);
 }
 
+.nav-sync-cloud-btn.not-synced .sync-cloud-icon,
+.nav-sync-cloud-btn.not-synced svg.sync-cloud-icon,
 .nav-sync-cloud-chip.not-synced .sync-cloud-icon,
 .nav-sync-cloud-chip.not-synced svg.sync-cloud-icon {
   color: #9ca3af !important;
   stroke: #9ca3af !important;
 }
 
+[data-theme="dark"] .nav-sync-cloud-btn.not-synced .sync-cloud-icon,
+[data-theme="dark"] .nav-sync-cloud-btn.not-synced svg.sync-cloud-icon,
 [data-theme="dark"] .nav-sync-cloud-chip.not-synced .sync-cloud-icon,
 [data-theme="dark"] .nav-sync-cloud-chip.not-synced svg.sync-cloud-icon {
   color: #9ca3af !important;
@@ -258,22 +267,27 @@ a {
 }
 
 /* Hover effects */
+.nav-sync-cloud-btn:hover,
 .nav-sync-cloud-chip:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
 
+.nav-sync-cloud-btn.is-synced:hover,
 .nav-sync-cloud-chip.is-synced:hover {
-  background: rgba(2, 132, 199, 0.14);
+  background: rgba(2, 132, 199, 0.16);
   border-color: #0284c7;
 }
 
+.nav-sync-cloud-btn.not-synced:hover,
 .nav-sync-cloud-chip.not-synced:hover {
-  background: rgba(156, 163, 175, 0.2);
+  background: rgba(156, 163, 175, 0.18);
   border-color: #9ca3af;
 }
 
 /* Syncing animation */
+.nav-sync-cloud-btn.is-syncing .sync-cloud-icon,
+.nav-sync-cloud-btn.is-syncing svg.sync-cloud-icon,
 .nav-sync-cloud-chip.is-syncing .sync-cloud-icon,
 .nav-sync-cloud-chip.is-syncing svg.sync-cloud-icon {
   animation: pulse-cloud-sync 1.2s infinite ease-in-out;
@@ -3189,7 +3203,8 @@ a {
   }
 
   .nav-action-btn,
-  .nav-sync-cloud-chip {
+  .nav-sync-cloud-chip,
+  .nav-sync-cloud-btn {
     padding: 0.5rem;
     min-width: 38px;
     height: 38px;
