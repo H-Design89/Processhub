@@ -36,25 +36,11 @@
         </div>
       </div>
 
-      <div class="nav-center">
-        <!-- Quick Global Stats -->
-        <div class="quick-status-chip">
-          <span class="status-dot pulsing"></span>
-          <span id="data-status-text">Đang kết nối dữ liệu</span>
-        </div>
-      </div>
-
       <div class="nav-right">
-        <!-- Add New Document Button -->
-        <button id="btn-open-add-doc" class="nav-action-btn primary btn-add-doc" title="Thêm quy trình / tài liệu mới vào hệ thống">
-          <i data-lucide="plus-circle"></i>
-          <span class="btn-text">Thêm mới</span>
-        </button>
-
-        <!-- Google Sheets Sync Button -->
-        <button id="btn-sync-data" class="nav-action-btn" title="Làm mới dữ liệu từ Google Sheets">
-          <i data-lucide="refresh-cw"></i>
-          <span class="btn-text">Đồng bộ</span>
+        <!-- Google Sheets Sync Status & Trigger -->
+        <button id="btn-sync-data" class="nav-sync-cloud-chip is-synced" title="Trạng thái kết nối Google Sheets (Bấm để làm mới dữ liệu)">
+          <i data-lucide="cloud" id="nav-sync-cloud-icon" class="sync-cloud-icon"></i>
+          <span id="data-status-text" class="sync-status-label">Đã đồng bộ Google Sheets</span>
         </button>
 
         <!-- System Settings Trigger (Gear Icon) -->

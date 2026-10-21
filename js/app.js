@@ -704,18 +704,18 @@ async function loadInitialData() {
         showToast(`Đã đồng bộ thành công ${docs.length} tài liệu từ Google Sheets!`, 'success');
       } else {
         AppState.allDocuments = DataStore.getDocuments();
-        updateDataStatusBadge(true, 'Dữ liệu chuẩn H-Design');
+        updateDataStatusBadge(false, 'Chưa đồng bộ Google Sheets');
       }
     } catch (err) {
       console.warn('Không thể đồng bộ Google Sheet ngay lúc này, dùng cache:', err);
       AppState.allDocuments = DataStore.getDocuments();
-      updateDataStatusBadge(true, 'Dữ liệu lưu tạm (Offline)');
+      updateDataStatusBadge(false, 'Chưa đồng bộ Google Sheets');
       showToast('Đang tải dữ liệu từ bộ nhớ tạm.', 'warning');
     }
   } else {
     // Use cached or mock data
     AppState.allDocuments = DataStore.getDocuments();
-    updateDataStatusBadge(true, 'Dữ liệu chuẩn H-Design');
+    updateDataStatusBadge(false, 'Chưa đồng bộ Google Sheets');
   }
 
   // Ensure sample doc-1 has multiple links for testing if not yet updated
@@ -758,11 +758,45 @@ async function loadInitialData() {
  * Update Data Status in Top Navigation Bar
  */
 function updateDataStatusBadge(isOnline, text) {
-  if (DOM.dataStatusText) {
-    DOM.dataStatusText.textContent = text;
-    const dot = DOM.dataStatusText.previousElementSibling;
-    if (dot) {
-      dot.style.backgroundColor = isOnline ? 'var(--accent-emerald)' : 'var(--accent-amber)';
+  const statusText = document.getElementById('data-status-text') || DOM.dataStatusText;
+  const syncBtn = document.getElementById('btn-sync-data') || DOM.btnSyncData;
+  const cloudIcon = document.getElementById('nav-sync-cloud-icon');
+
+  if (statusText && text) {
+    statusText.textContent = text;
+  }
+
+  const isSyncing = text && text.includes('Đang đồng bộ');
+  const isSynced = Boolean(isOnline) && Boolean(text) && !isSyncing && (
+    text.includes('Đã đồng bộ') ||
+    text.includes('Google Sheets') ||
+    text.includes('thành công')
+  );
+
+  if (syncBtn) {
+    syncBtn.classList.remove('is-synced', 'not-synced', 'is-syncing');
+
+    if (isSyncing) {
+      syncBtn.classList.add('not-synced', 'is-syncing');
+      syncBtn.setAttribute('title', 'Đang đồng bộ dữ liệu từ Google Sheets...');
+      if (cloudIcon) {
+        cloudIcon.style.color = '#9CA3AF';
+        cloudIcon.style.stroke = '#9CA3AF';
+      }
+    } else if (isSynced) {
+      syncBtn.classList.add('is-synced');
+      syncBtn.setAttribute('title', 'Đã đồng bộ Google Sheets (Bấm để làm mới dữ liệu)');
+      if (cloudIcon) {
+        cloudIcon.style.color = '#0284C7';
+        cloudIcon.style.stroke = '#0284C7';
+      }
+    } else {
+      syncBtn.classList.add('not-synced');
+      syncBtn.setAttribute('title', 'Chưa đồng bộ Google Sheets (Bấm để thử kết nối lại)');
+      if (cloudIcon) {
+        cloudIcon.style.color = '#9CA3AF';
+        cloudIcon.style.stroke = '#9CA3AF';
+      }
     }
   }
 }
@@ -1983,7 +2017,8 @@ async function syncFromConfiguredSheet(showNotification = false) {
     return;
   }
 
-  DOM.btnSyncData.classList.add('pulsing');
+  updateDataStatusBadge(false, 'Đang đồng bộ Google Sheets...');
+  if (DOM.btnSyncData) DOM.btnSyncData.classList.add('pulsing');
   try {
     const docs = await fetchGoogleSheetData(config.sheetId, config.tabName);
     DataStore.setDocuments(docs);
@@ -1992,14 +2027,15 @@ async function syncFromConfiguredSheet(showNotification = false) {
     populateDepartmentOptions();
     applyFiltersAndRender();
     if (showNotification) {
-      showToast(`Đã cập nhật dữ liệu mới nhất (${docs.length} mục)!`, 'success');
+      showToast(`Đã đồng bộ thành công ${docs.length} tài liệu từ Google Sheets!`, 'success');
     }
   } catch (err) {
+    updateDataStatusBadge(false, 'Chưa đồng bộ Google Sheets');
     if (showNotification) {
       showToast('Không thể kết nối đến Google Sheets. Đang dùng dữ liệu đã lưu.', 'warning');
     }
   } finally {
-    DOM.btnSyncData.classList.remove('pulsing');
+    if (DOM.btnSyncData) DOM.btnSyncData.classList.remove('pulsing');
   }
 }
 
