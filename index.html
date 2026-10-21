@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#4F46E5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ProcessHub - Cổng Tra Cứu Quy Trình & Hướng Dẫn Làm Việc</title>
+  <meta name="description" content="Hệ thống tra cứu quy trình, quy chuẩn, hướng dẫn công việc nội bộ đa phòng ban kết nối Google Drive và Google Sheets.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons (CDN) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css?v=20261017c">
+</head>
+<body>
+  <div id="app" class="app-layout">
+    <!-- TOP NAVIGATION -->
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i data-lucide="layers"></i>
+          </div>
+          <div class="brand-text">
+            <div class="brand-title">Process<span>Hub</span></div>
+            <div class="brand-sub">H-Design SOP & Standards Center</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <!-- Quick Global Stats -->
+        <div class="quick-status-chip">
+          <span class="status-dot pulsing"></span>
+          <span id="data-status-text">Đang kết nối dữ liệu</span>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <!-- Add New Document Button -->
+        <button id="btn-open-add-doc" class="nav-action-btn primary btn-add-doc" title="Thêm quy trình / tài liệu mới vào hệ thống">
+          <i data-lucide="plus-circle"></i>
+          <span class="btn-text">Thêm mới</span>
+        </button>
+
+        <!-- Google Sheets Sync Button -->
+        <button id="btn-sync-data" class="nav-action-btn" title="Làm mới dữ liệu từ Google Sheets">
+          <i data-lucide="refresh-cw"></i>
+          <span class="btn-text">Đồng bộ</span>
+        </button>
+
+        <!-- System Settings Trigger (Gear Icon) -->
+        <button id="btn-open-settings" class="nav-action-btn primary" title="Cài đặt hệ thống (Nguồn Sheets, Link NotebookLM...)">
+          <i data-lucide="settings"></i>
+          <span class="btn-text">Cài đặt</span>
+        </button>
+
+        <!-- User Account / Role Profile Button -->
+        <button id="btn-open-login" class="nav-action-btn user-btn" title="Thông tin tài khoản & Phân quyền">
+          <i data-lucide="shield-check" id="nav-user-icon"></i>
+          <span class="btn-text" id="nav-user-name">Ban Giám Đốc</span>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="btn-toggle-theme" class="nav-action-btn icon-only" title="Đổi giao diện Sáng / Tối">
+          <i data-lucide="moon" id="theme-icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- HERO SECTION & SEARCH -->
+    <section class="hero-section compact-hero">
+      <div class="hero-container">
+        <h1 class="hero-heading">
+          Tra cứu <span class="gradient-text">Quy trình</span> & <span class="gradient-text-alt">Hướng dẫn</span> làm việc
+        </h1>
+
+        <!-- MEGA SEARCH BAR -->
+        <div class="search-box-wrapper">
+          <div class="search-input-box">
+            <i data-lucide="search" class="search-main-icon"></i>
+            <input 
+              type="text" 
+              id="global-search-input" 
+              placeholder="Nhập tên quy trình, mã tài liệu (VD: QT-TK-01, Quy chuẩn 3D, Check-in...), phòng ban..."
+              autocomplete="off"
+            >
+            <div class="search-hotkey">
+              <kbd>/</kbd>
+            </div>
+            <button id="btn-clear-search" class="search-clear-btn hidden" title="Xóa tìm kiếm">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- QUICK CATEGORY TABS -->
+        <div class="category-pills-bar" id="category-pills-container">
+          <button class="cat-pill active" data-category="all">
+            <i data-lucide="layers"></i>
+            <span>Tất cả</span>
+          </button>
+          <button class="cat-pill" data-category="Quy trình">
+            <i data-lucide="workflow"></i>
+            <span>Quy trình</span>
+          </button>
+          <button class="cat-pill" data-category="Quy chuẩn">
+            <i data-lucide="award"></i>
+            <span>Quy chuẩn</span>
+          </button>
+          <button class="cat-pill" data-category="Hướng dẫn">
+            <i data-lucide="file-check"></i>
+            <span>Hướng dẫn</span>
+          </button>
+          <button class="cat-pill" data-category="Biểu mẫu">
+            <i data-lucide="file-spreadsheet"></i>
+            <span>Biểu mẫu</span>
+          </button>
+          <button class="cat-pill" data-category="Chính sách">
+            <i data-lucide="shield"></i>
+            <span>Chính sách</span>
+          </button>
+          <button class="cat-pill fav-pill" id="cat-pill-fav" data-category="favorite">
+            <i data-lucide="star"></i>
+            <span>Yêu thích (<span id="cat-fav-count">0</span>)</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- METRICS (Preserved in DOM for state syncing, hidden visually) -->
+    <div class="metrics-bar-hidden" style="display: none;" aria-hidden="true">
+      <div id="card-filter-all"><span id="stat-total-docs">0</span></div>
+      <div id="card-filter-departments"><span id="stat-total-depts">0</span></div>
+      <div id="card-filter-quy-trinh"><span id="stat-total-processes">0</span></div>
+      <div id="card-filter-quy-chuan"><span id="stat-total-standards">0</span></div>
+      <div id="card-filter-huong-dan"><span id="stat-total-instructions">0</span></div>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      <div class="content-container">
+        <!-- THỐNG KÊ NHANH & BỘ LỌC CHIP DI ĐỘNG (HORIZONTAL STATS CAROUSEL) -->
+        <div class="kpi-carousel-section">
+          <div class="kpi-carousel-header">
+            <span class="kpi-carousel-title"><i data-lucide="bar-chart-3"></i> Thống kê số lượng theo phòng ban:</span>
+            <span class="kpi-carousel-hint">Chạm chip để lọc nhanh</span>
+          </div>
+          <div class="kpi-carousel-track" id="kpi-stats-container">
+            <!-- Dynamically populated by JS: [Tất cả: 12] [Phòng Thiết Kế: 3] ... -->
+          </div>
+        </div>
+
+        <!-- STREAMLINED UNIFIED TOOLBAR -->
+        <div class="filter-toolbar">
+          <div class="filter-group-left">
+            <!-- Department Dropdown -->
+            <div class="select-wrapper">
+              <label for="filter-dept"><i data-lucide="building"></i> Phòng ban:</label>
+              <select id="filter-dept" class="custom-select">
+                <option value="all">Tất cả phòng ban</option>
+              </select>
+            </div>
+
+            <!-- Group By Selector (Flat vs By Department) -->
+            <div class="select-wrapper group-wrapper" id="group-wrapper">
+              <label for="select-group-by"><i data-lucide="folder-tree"></i> Gom nhóm:</label>
+              <select id="select-group-by" class="custom-select compact">
+                <option value="none">Danh sách phẳng</option>
+                <option value="department">Theo phòng ban</option>
+              </select>
+            </div>
+
+            <!-- Preserved hidden elements for AppState syncing -->
+            <div style="display: none;" aria-hidden="true">
+              <select id="filter-type">
+                <option value="all">Tất cả thể loại</option>
+                <option value="Quy trình">Quy trình (SOP)</option>
+                <option value="Quy chuẩn">Quy chuẩn</option>
+                <option value="Hướng dẫn">Hướng dẫn làm việc</option>
+                <option value="Biểu mẫu">Biểu mẫu (Template)</option>
+                <option value="Chính sách">Chính sách & Quy định</option>
+              </select>
+              <button id="btn-toggle-favorite-filter">
+                <span>Yêu thích (<span id="favorite-count">0</span>)</span>
+              </button>
+              <div id="dept-pills-container"></div>
+            </div>
+
+            <!-- Reset Filters -->
+            <button id="btn-reset-filters" class="filter-pill-btn secondary" title="Xóa tất cả bộ lọc">
+              <i data-lucide="rotate-ccw"></i>
+              <span>Đặt lại</span>
+            </button>
+
+            <!-- Export Excel Button -->
+            <button id="btn-export-excel" class="filter-pill-btn secondary btn-export-excel" title="Xuất danh sách ra file Excel / CSV">
+              <i data-lucide="file-spreadsheet"></i>
+              <span>Xuất Excel</span>
+            </button>
+
+            <!-- Add New Process Button (Quick Action) -->
+            <button id="btn-toolbar-add-doc" class="filter-pill-btn primary btn-toolbar-add-doc" title="Thêm quy trình / tài liệu mới">
+              <i data-lucide="plus"></i>
+              <span>Thêm mới</span>
+            </button>
+          </div>
+
+          <div class="filter-group-right">
+            <!-- Results Counter (Clean Inline) -->
+            <div class="results-count-inline">
+              <span>Hiển thị</span>&nbsp;<strong id="current-count" class="highlight">0</strong>&nbsp;/&nbsp;<span id="total-count">0</span>&nbsp;<span>tài liệu</span>
+            </div>
+
+            <!-- Sort dropdown -->
+            <div class="select-wrapper sort-wrapper">
+              <label for="sort-by"><i data-lucide="arrow-down-up"></i> Sắp xếp:</label>
+              <select id="sort-by" class="custom-select compact">
+                <option value="updated-desc">Mới cập nhật nhất</option>
+                <option value="title-asc">Tên tài liệu (A-Z)</option>
+                <option value="code-asc">Mã tài liệu (A-Z)</option>
+                <option value="dept-asc">Theo phòng ban</option>
+              </select>
+            </div>
+
+            <!-- View Layout Toggle (Grid vs Table) -->
+            <div class="view-mode-toggle">
+              <button id="btn-view-grid" class="view-btn" title="Dạng lưới thẻ (Grid)">
+                <i data-lucide="layout-grid"></i>
+                <span class="view-mode-label">Lưới</span>
+              </button>
+              <button id="btn-view-table" class="view-btn active" title="Dạng danh sách bảng (Table)">
+                <i data-lucide="list"></i>
+                <span class="view-mode-label">Bảng</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVE FILTER CHIPS (Shown dynamically when filtering) -->
+        <div id="active-filter-chips" class="active-filter-chips"></div>
+
+        <!-- DOCUMENTS DISPLAY (GRID VIEW) -->
+        <div id="documents-grid" class="documents-grid-layout hidden">
+          <!-- Rendered cards -->
+        </div>
+
+        <!-- DOCUMENTS DISPLAY (TABLE VIEW) -->
+        <div id="documents-table-wrapper" class="table-container">
+          <!-- Table Subhead Bar with Group Controls & Counter -->
+          <div class="table-subhead-bar">
+            <div class="table-subhead-info">
+              <span class="table-mode-badge"><i data-lucide="table"></i> Dạng Bảng</span>
+              <span id="table-display-summary">Đang hiển thị <strong id="table-display-count">0</strong> tài liệu</span>
+            </div>
+            <div class="table-subhead-actions">
+              <button id="btn-toggle-all-groups" class="table-mini-btn hidden" title="Mở rộng / Thu gọn tất cả nhóm">
+                <i data-lucide="chevrons-up-down"></i>
+                <span id="text-toggle-all-groups">Thu gọn tất cả</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive-wrapper">
+            <table class="documents-table">
+              <thead>
+                <tr>
+                  <th style="width: 48px; text-align: center;">#</th>
+                  <th style="width: 130px;"><i data-lucide="hash"></i> Mã số</th>
+                  <th><i data-lucide="file-text"></i> Tên quy trình / Hướng dẫn</th>
+                  <th style="width: 170px;"><i data-lucide="building"></i> Phòng ban</th>
+                  <th style="width: 140px;"><i data-lucide="tag"></i> Phân loại</th>
+                  <th style="width: 90px; text-align: center;"><i data-lucide="git-commit"></i> Bản</th>
+                  <th style="width: 110px;"><i data-lucide="calendar"></i> Cập nhật</th>
+                  <th style="width: 160px; text-align: center;"><i data-lucide="sliders"></i> Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="documents-table-body">
+                <!-- Rendered rows -->
+              </tbody>
+              <tfoot>
+                <tr class="table-summary-footer-row">
+                  <td colspan="8">
+                    <div class="table-footer-content">
+                      <span class="footer-stat-item">Tổng cộng: <strong id="tfoot-total-count">0</strong> tài liệu</span>
+                      <span class="footer-stat-dot">•</span>
+                      <span class="footer-stat-item">Phòng ban: <strong id="tfoot-dept-count">0</strong></span>
+                      <span class="footer-stat-dot">•</span>
+                      <span class="footer-stat-item">Cập nhật gần nhất: <span id="tfoot-latest-date">-</span></span>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- EMPTY STATE -->
+        <div id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">
+            <i data-lucide="search-x"></i>
+          </div>
+          <h3 class="empty-title">Không tìm thấy tài liệu phù hợp</h3>
+          <p class="empty-text">Thử tìm kiếm với từ khóa khác hoặc điều chỉnh lại bộ lọc phòng ban / thể loại.</p>
+          <button id="btn-empty-reset" class="btn primary">
+            <i data-lucide="rotate-ccw"></i> Xóa bộ lọc
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- ENTERPRISE FOOTER -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <div class="footer-left">
+          <div class="footer-logo-row">
+            <div class="footer-logo">Process<span>Hub</span></div>
+            <span class="footer-badge">H-Design Enterprise</span>
+          </div>
+          <p class="footer-desc">Hệ thống tra cứu quy chuẩn thiết kế, kỹ thuật & quy trình nghiệp vụ nội bộ H-Design</p>
+        </div>
+        <div class="footer-right">
+          <div class="footer-links">
+            <button class="footer-link-btn" id="btn-footer-guide"><i data-lucide="help-circle"></i> Hướng dẫn kết nối Sheets</button>
+            <button class="footer-link-btn" id="btn-footer-template"><i data-lucide="file-spreadsheet"></i> Tải mẫu Google Sheets</button>
+          </div>
+          <div class="footer-copy">
+            <span>© 2026 ProcessHub by H-Design</span>
+            <span class="footer-copy-dot">•</span>
+            <span class="footer-sync-status"><span class="footer-dot-green"></span> Đồng bộ Google Sheets & Drive</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- FLOATING ACTIONS: AI ASSISTANT & SETTINGS GEAR -->
+    <div id="ai-assistant-wrapper" class="floating-actions-dock" title="Phím tắt nhanh">
+      <!-- Dedicated Gear Settings Button -->
+      <button id="btn-floating-settings" class="floating-gear-btn" title="Cài đặt hệ thống (Nguồn dữ liệu, Link NotebookLM...)" aria-label="Cài đặt hệ thống">
+        <i data-lucide="settings"></i>
+      </button>
+
+      <!-- Dedicated AI Assistant (NotebookLM) Button -->
+      <button id="btn-open-ai-assistant" class="ai-assistant-btn" aria-label="Hỏi đáp AI NotebookLM" title="Mở Trợ lý AI NotebookLM">
+        <span class="ai-btn-robot-icon">🤖</span>
+        <span class="ai-btn-text">Trợ lý AI</span>
+      </button>
+    </div>
+
+    <!-- MODAL: ADD NEW DOCUMENT / PROCESS -->
+    <div id="modal-add-doc" class="modal-backdrop hidden">
+      <div class="modal-window modal-add-doc-window">
+        <div class="sheet-drag-handle" aria-hidden="true"></div>
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon-badge add-badge">
+              <i data-lucide="plus-circle" class="modal-title-icon"></i>
+            </div>
+            <div>
+              <h3>Thêm Quy Trình / Hướng Dẫn Mới</h3>
+              <p>Quy trình sẽ hiển thị ngay trên hệ thống và tự động lưu đồng bộ về Google Sheets</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-add-doc" title="Đóng">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <form id="form-add-doc" class="modal-add-doc-form">
+          <div class="modal-body modal-add-doc-body">
+            <!-- Status Banner about Sync destination -->
+            <div id="add-doc-sync-status" class="add-doc-sync-banner">
+            <i data-lucide="info" class="banner-icon"></i>
+            <span id="add-doc-sync-status-text">Đang kết nối Google Sheets...</span>
+          </div>
+
+          <!-- Row 1: Code and Title -->
+          <div class="form-row-grid two-cols-unequal">
+            <div class="form-group code-field-group">
+              <div class="label-with-action">
+                <label for="add-doc-code">Mã tài liệu <span class="required">*</span></label>
+                <button type="button" id="btn-suggest-code" class="btn-text-action" title="Tự động tạo mã tiếp theo dựa vào phòng ban">
+                  <i data-lucide="sparkles"></i> Gợi ý mã
+                </button>
+              </div>
+              <input 
+                type="text" 
+                id="add-doc-code" 
+                class="form-input" 
+                placeholder="VD: QT-TK-02" 
+                required 
+                autocomplete="off"
+              >
+            </div>
+            <div class="form-group title-field-group">
+              <label for="add-doc-title">Tên quy trình / Hướng dẫn công việc <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="add-doc-title" 
+                class="form-input" 
+                placeholder="VD: Quy trình nghiệm thu chất lượng thi công thô..." 
+                required 
+                autocomplete="off"
+              >
+            </div>
+          </div>
+
+          <!-- Row 2: Department and Category -->
+          <div class="form-row-grid two-cols">
+            <div class="form-group">
+              <label for="add-doc-dept">Phòng ban áp dụng <span class="required">*</span></label>
+              <select id="add-doc-dept" class="form-input custom-select" required>
+                <option value="Bộ phận Kỹ Thuật">Bộ phận Kỹ Thuật</option>
+                <option value="Bộ phận Sản Xuất">Bộ phận Sản Xuất</option>
+                <option value="Bộ phận Kinh Doanh">Bộ phận Kinh Doanh</option>
+                <option value="Hành Chính - Nhân Sự">Hành Chính - Nhân Sự</option>
+                <option value="Ban Giám Đốc">Ban Giám Đốc</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="add-doc-cat">Loại tài liệu <span class="required">*</span></label>
+              <select id="add-doc-cat" class="form-input custom-select" required>
+                <option value="Quy trình">Quy trình (QT)</option>
+                <option value="Quy chuẩn">Quy chuẩn (QC)</option>
+                <option value="Hướng dẫn">Hướng dẫn (HD)</option>
+                <option value="Biểu mẫu">Biểu mẫu (BM)</option>
+                <option value="Chính sách">Chính sách & Quy chế (CS)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Version and Effective Date -->
+          <div class="form-row-grid two-cols">
+            <div class="form-group">
+              <label for="add-doc-version">Phiên bản ban hành <span class="required">*</span></label>
+              <input 
+                type="text" 
+                id="add-doc-version" 
+                class="form-input" 
+                value="v1.0" 
+                placeholder="v1.0" 
+                required
+              >
+            </div>
+            <div class="form-group">
+              <label for="add-doc-date">Ngày ban hành / Hiệu lực <span class="required">*</span></label>
+              <input 
+                type="date" 
+                id="add-doc-date" 
+                class="form-input" 
+                required
+              >
+            </div>
+          </div>
+
+          <!-- Row 4: Google Drive Links Builder (Supports 1 or Multiple Files with Titles) -->
+          <div class="form-group full-width">
+            <div class="form-group-header-flex">
+              <label>Đường dẫn Google Drive & File đính kèm <span class="required">*</span></label>
+              <button type="button" id="btn-add-doc-more-link" class="btn-text-action">
+                <i data-lucide="plus-circle"></i>
+                <span>Thêm link / file đính kèm</span>
+              </button>
+            </div>
+            <div id="add-doc-links-container" class="doc-links-builder-list">
+              <!-- Rendered via JS -->
+            </div>
+            <input type="hidden" id="add-doc-url" name="add-doc-url">
+            <p class="form-hint">Hỗ trợ gắn nhiều link (File quy trình chính, Biểu mẫu Word/Excel, Checklist kiểm tra...) kèm tên gọi rõ ràng.</p>
+          </div>
+
+          <!-- Row 5: Description -->
+          <div class="form-group">
+            <label for="add-doc-desc">Tóm tắt nội dung & Mục đích áp dụng</label>
+            <textarea 
+              id="add-doc-desc" 
+              class="form-input form-textarea" 
+              rows="3" 
+              placeholder="Mô tả tóm tắt các bước chính, phạm vi thực hiện và tiêu chuẩn bàn giao để nhân viên dễ dàng nắm bắt..."
+            ></textarea>
+          </div>
+
+          <!-- Row 6: Tags -->
+          <div class="form-group">
+            <label for="add-doc-tags">Từ khóa tìm kiếm (Tags)</label>
+            <input 
+              type="text" 
+              id="add-doc-tags" 
+              class="form-input" 
+              placeholder="VD: thiết kế, 3d, nghiệm thu, nội thất (cách nhau bằng dấu phẩy)" 
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+          <div class="modal-footer add-doc-footer">
+            <button type="button" class="btn secondary" id="btn-cancel-add-doc">
+              Hủy bỏ
+            </button>
+            <button type="submit" class="btn primary" id="btn-submit-add-doc">
+              <i data-lucide="plus-circle" id="submit-add-icon"></i>
+              <span id="submit-add-text">Lưu & Xuất Bản Quy Trình</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: EDIT DOCUMENT / UPDATE GOOGLE DRIVE LINK -->
+    <div id="modal-edit-doc" class="modal-backdrop hidden">
+      <div class="modal-window modal-add-doc-window">
+        <div class="sheet-drag-handle" aria-hidden="true"></div>
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="modal-icon-badge edit-badge">
+              <i data-lucide="edit-3" class="modal-title-icon"></i>
+            </div>
+            <div>
+              <h3>Cập Nhật Quy Trình & Link Google Drive</h3>
+              <p>Thay đổi đường dẫn file tài liệu, cập nhật phiên bản hoặc nội dung quy trình</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-edit-doc" title="Đóng">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <form id="form-edit-doc" class="modal-add-doc-form">
+          <div class="modal-body modal-add-doc-body">
+            <!-- Sync Status Banner -->
+            <div id="edit-doc-sync-status" class="add-doc-sync-banner">
+              <i data-lucide="info" class="banner-icon"></i>
+              <span id="edit-doc-sync-status-text">Đang kết nối Google Sheets...</span>
+            </div>
+
+            <!-- Hidden field for original doc id -->
+            <input type="hidden" id="edit-doc-id">
+
+            <!-- Row 1: Code and Title -->
+            <div class="form-row-grid two-cols-unequal">
+              <div class="form-group code-field-group">
+                <label for="edit-doc-code">Mã tài liệu <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="edit-doc-code" 
+                  class="form-input readonly-input" 
+                  readonly
+                  title="Mã tài liệu cố định để liên kết lịch sử phiên bản"
+                >
+              </div>
+              <div class="form-group title-field-group">
+                <label for="edit-doc-title">Tên quy trình / Hướng dẫn công việc <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="edit-doc-title" 
+                  class="form-input" 
+                  required 
+                  autocomplete="off"
+                >
+              </div>
+            </div>
+
+            <!-- Row 2: Department and Category -->
+            <div class="form-row-grid two-cols">
+              <div class="form-group">
+                <label for="edit-doc-dept">Phòng ban áp dụng <span class="required">*</span></label>
+                <select id="edit-doc-dept" class="form-input custom-select" required>
+                  <option value="Bộ phận Kỹ Thuật">Bộ phận Kỹ Thuật</option>
+                  <option value="Bộ phận Sản Xuất">Bộ phận Sản Xuất</option>
+                  <option value="Bộ phận Kinh Doanh">Bộ phận Kinh Doanh</option>
+                  <option value="Hành Chính - Nhân Sự">Hành Chính - Nhân Sự</option>
+                  <option value="Ban Giám Đốc">Ban Giám Đốc</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="edit-doc-cat">Loại tài liệu <span class="required">*</span></label>
+                <select id="edit-doc-cat" class="form-input custom-select" required>
+                  <option value="Quy trình">Quy trình (QT)</option>
+                  <option value="Quy chuẩn">Quy chuẩn (QC)</option>
+                  <option value="Hướng dẫn">Hướng dẫn (HD)</option>
+                  <option value="Biểu mẫu">Biểu mẫu (BM)</option>
+                  <option value="Chính sách">Chính sách & Quy chế (CS)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 3: Version and Effective Date -->
+            <div class="form-row-grid two-cols">
+              <div class="form-group">
+                <label for="edit-doc-version">Phiên bản áp dụng <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="edit-doc-version" 
+                  class="form-input" 
+                  required
+                >
+              </div>
+              <div class="form-group">
+                <label for="edit-doc-date">Ngày cập nhật / Hiệu lực <span class="required">*</span></label>
+                <input 
+                  type="date" 
+                  id="edit-doc-date" 
+                  class="form-input" 
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Row 4: Google Drive Links Builder (Supports 1 or Multiple Files with Titles) -->
+            <div class="form-group highlight-form-group full-width">
+              <div class="form-group-header-flex">
+                <label class="label-highlight">
+                  <i data-lucide="link"></i> Đường dẫn Google Drive & File đính kèm <span class="required">*</span>
+                </label>
+                <button type="button" id="btn-edit-doc-more-link" class="btn-text-action">
+                  <i data-lucide="plus-circle"></i>
+                  <span>Thêm link / file đính kèm</span>
+                </button>
+              </div>
+              <div id="edit-doc-links-container" class="doc-links-builder-list">
+                <!-- Rendered dynamically with existing links -->
+              </div>
+              <input type="hidden" id="edit-doc-url" name="edit-doc-url">
+              <p class="form-hint">Dán link chia sẻ Google Drive (PDF, Word, Excel, Slide...). Bạn có thể gắn nhiều link kèm tên gọi riêng.</p>
+            </div>
+
+            <!-- Row 5: Change Reason (For Version History Archiving) -->
+            <div class="form-group">
+              <label for="edit-doc-reason">Lý do thay đổi / Nội dung cập nhật (Ghi vào Lịch sử phiên bản)</label>
+              <input 
+                type="text" 
+                id="edit-doc-reason" 
+                class="form-input" 
+                placeholder="VD: Cập nhật link bản vẽ CAD mới, chuẩn hóa quy chuẩn nghiệm thu 2026..."
+                autocomplete="off"
+              >
+            </div>
+
+            <!-- Row 6: Description -->
+            <div class="form-group">
+              <label for="edit-doc-desc">Tóm tắt nội dung & Mục đích áp dụng</label>
+              <textarea 
+                id="edit-doc-desc" 
+                class="form-input form-textarea" 
+                rows="3" 
+                placeholder="Mô tả tóm tắt nội dung quy trình..."
+              ></textarea>
+            </div>
+
+            <!-- Row 7: Tags -->
+            <div class="form-group">
+              <label for="edit-doc-tags">Từ khóa tìm kiếm (Tags)</label>
+              <input 
+                type="text" 
+                id="edit-doc-tags" 
+                class="form-input" 
+                placeholder="VD: thiết kế, 3d, nghiệm thu (cách nhau bằng dấu phẩy)" 
+                autocomplete="off"
+              >
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="modal-footer add-doc-footer">
+            <button type="button" class="btn secondary" id="btn-cancel-edit-doc">
+              Hủy bỏ
+            </button>
+            <button type="submit" class="btn primary" id="btn-submit-edit-doc">
+              <i data-lucide="save" id="submit-edit-icon"></i>
+              <span id="submit-edit-text">Lưu Cập Nhật & Đồng Bộ</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL: GOOGLE SHEETS & NOTEBOOKLM CONFIGURATION -->
+    <div id="modal-settings" class="modal-backdrop hidden">
+      <div class="modal-window">
+        <div class="sheet-drag-handle" aria-hidden="true"></div>
+        <div class="modal-header">
+          <div class="modal-title">
+            <i data-lucide="settings" class="modal-title-icon"></i>
+            <div>
+              <h3>Cài đặt hệ thống & Nguồn dữ liệu</h3>
+              <p>Cấu hình Google Sheets và đường dẫn sổ tay Trợ lý AI NotebookLM</p>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-settings">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Step 1: Explanation -->
+          <div class="config-step-card">
+            <div class="step-badge">Cách hoạt động</div>
+            <p>
+              Bạn chỉ cần tạo một file <strong>Google Sheets</strong> công khai quyền xem <em>("Bất kỳ ai có liên kết đều có thể xem")</em>.
+              Hệ thống sẽ tự động đọc dữ liệu mới nhất mỗi khi nhân viên mở trang hoặc bấm "Đồng bộ".
+            </p>
+          </div>
+
+          <!-- Input Sheet URL or ID -->
+          <div class="form-group">
+            <label for="input-sheet-url">
+              <strong>Đường dẫn (URL) hoặc ID của Google Sheet:</strong>
+            </label>
+            <div class="input-with-button">
+              <input 
+                type="text" 
+                id="input-sheet-url" 
+                placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit..."
+              >
+              <button id="btn-test-sheet" class="btn secondary">
+                <i data-lucide="check-circle-2"></i> Kiểm tra kết nối
+              </button>
+            </div>
+            <div id="sheet-connection-status" class="connection-status-msg hidden"></div>
+          </div>
+
+          <!-- Sheet Tab Name (Optional) -->
+          <div class="form-group">
+            <label for="input-sheet-tab">
+              <strong>Tên trang tính (Sheet Name - không bắt buộc):</strong>
+            </label>
+            <input 
+              type="text" 
+              id="input-sheet-tab" 
+              placeholder="VD: Sheet1 hoặc DanhMucQuyTrinh (để trống sẽ lấy trang đầu tiên)"
+            >
+          </div>
+
+          <!-- NotebookLM AI Assistant Link -->
+          <div class="form-group">
+            <label for="input-notebooklm-url">
+              <strong>🤖 Đường dẫn sổ tay NotebookLM (Trợ lý AI H-Design):</strong>
+            </label>
+            <input 
+              type="text" 
+              id="input-notebooklm-url" 
+              placeholder="https://notebooklm.google.com/notebook/..."
+            >
+            <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; display: block;">
+              Bấm nút Trợ lý AI ở góc dưới màn hình để mở sổ tay NotebookLM này tra cứu nhanh nội dung tài liệu.
+            </small>
+          </div>
+
+          <!-- Template & Columns Guide -->
+          <div class="sheet-format-guide">
+            <div class="format-header">
+              <i data-lucide="table"></i>
+              <span>Cấu trúc các cột chuẩn trong Google Sheets:</span>
+            </div>
+            <div class="format-table-preview">
+              <code>Mã số</code> | <code>Tên tài liệu</code> | <code>Phòng ban</code> | <code>Phân loại</code> | <code>Phiên bản</code> | <code>Ngày ban hành</code> | <code>Link Google Drive</code> | <code>Mô tả tóm tắt</code>
+            </div>
+            <div class="format-buttons">
+              <button id="btn-download-csv-sample" class="btn-text-link">
+                <i data-lucide="download"></i> Tải mẫu Quy trình hiện hành (Tab 1)
+              </button>
+              <button id="btn-download-version-history-sample" class="btn-text-link">
+                <i data-lucide="history"></i> Tải mẫu Lịch sử phiên bản (Tab 2)
+              </button>
+              <button id="btn-download-apps-script" class="btn-text-link" style="color: var(--primary); font-weight: 700;">
+                <i data-lucide="file-code"></i> Tải Code Google Apps Script tự động hóa
+              </button>
+              <button id="btn-use-mock-data" class="btn-text-link">
+                <i data-lucide="rotate-ccw"></i> Sử dụng dữ liệu mẫu sẵn có
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-cancel-settings" class="btn secondary">Hủy bỏ</button>
+          <button id="btn-save-settings" class="btn primary">
+            <i data-lucide="save"></i> Lưu & Đồng bộ ngay
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: DOCUMENT PREVIEW & DETAILS -->
+    <div id="modal-preview" class="modal-backdrop hidden">
+      <div class="modal-window modal-large">
+        <div class="sheet-drag-handle" aria-hidden="true"></div>
+        <div class="modal-header">
+          <div class="modal-title">
+            <div id="preview-badge-category" class="cat-badge">Quy trình</div>
+            <div>
+              <h3 id="preview-title">Tên quy trình</h3>
+              <p id="preview-meta">Mã: QT-01 • Phòng ban: Thiết kế • Cập nhật: 15/10/2026</p>
+            </div>
+          </div>
+          <div class="modal-header-actions">
+            <button id="btn-preview-fav" class="modal-icon-action" title="Lưu vào yêu thích">
+              <i data-lucide="star"></i>
+            </button>
+            <button class="modal-close-btn" id="btn-close-preview">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-body no-padding">
+          <div class="preview-layout">
+            <!-- Left Info Panel -->
+            <div class="preview-info-panel">
+              <!-- Fast Action Buttons Placed at TOP: Supports 1 or Multiple Named Links -->
+              <div class="info-block action-block">
+                <div class="preview-links-header">
+                  <label id="preview-links-label">Tài liệu & File đính kèm</label>
+                  <span id="preview-links-count" class="links-count-badge">1 file</span>
+                </div>
+                <div id="preview-links-container" class="preview-links-list">
+                  <a id="preview-download-link" href="#" target="_blank" class="btn primary btn-block btn-download-hero">
+                    <i data-lucide="download"></i>
+                    <span>Tải trực tiếp từ Google Drive</span>
+                  </a>
+                  <div class="action-btn-row">
+                    <a id="preview-drive-view" href="#" target="_blank" class="btn secondary btn-sm-flex">
+                      <i data-lucide="external-link"></i>
+                      <span>Mở Google Drive</span>
+                    </a>
+                    <button id="btn-copy-link" class="btn outline btn-sm-flex">
+                      <i data-lucide="copy"></i>
+                      <span>Sao chép link</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info-block">
+                <label>Mô tả quy trình / Hướng dẫn</label>
+                <p id="preview-desc" class="info-desc">Mô tả chi tiết nội dung quy trình...</p>
+              </div>
+
+              <div class="info-block">
+                <label>Thông tin phiên bản & quy chuẩn</label>
+                <div class="info-chips-grid">
+                  <div class="info-chip-item">
+                    <span class="label">Mã tài liệu:</span>
+                    <strong id="preview-code">QT-TK-01</strong>
+                  </div>
+                  <div class="info-chip-item">
+                    <span class="label">Phiên bản:</span>
+                    <strong id="preview-version">v2.1</strong>
+                  </div>
+                  <div class="info-chip-item">
+                    <span class="label">Phòng ban:</span>
+                    <strong id="preview-dept">Thiết kế</strong>
+                  </div>
+                  <div class="info-chip-item">
+                    <span class="label">Ngày hiệu lực:</span>
+                    <strong id="preview-date">10/10/2026</strong>
+                  </div>
+                </div>
+                <button type="button" id="btn-preview-view-history" class="btn outline btn-block btn-preview-history-trigger">
+                  <i data-lucide="history"></i>
+                  <span>Xem lịch sử thay đổi & lý do cập nhật</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Embedded Viewer (if Drive file) -->
+            <div class="preview-viewer-panel">
+              <div id="preview-iframe-wrapper" class="iframe-container">
+                <iframe id="preview-iframe" src="" frameborder="0" allow="autoplay"></iframe>
+              </div>
+              <div id="preview-iframe-fallback" class="iframe-fallback hidden">
+                <i data-lucide="file-text" class="fallback-icon"></i>
+                <h4>Xem trước trực tiếp không khả dụng</h4>
+                <p>Nhấp vào nút tải bên trên để mở hoặc tải file gốc từ Google Drive về máy của bạn.</p>
+                <a id="preview-fallback-btn" href="#" target="_blank" class="btn primary">
+                  <i data-lucide="download"></i> Tải file ngay
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERSION HISTORY & CHANGE LOG MODAL -->
+    <div id="modal-version-history" class="modal-backdrop hidden">
+      <div class="modal-window modal-version-history-window">
+        <div class="sheet-drag-handle" aria-hidden="true"></div>
+        
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="version-history-icon-badge">
+              <i data-lucide="history"></i>
+            </div>
+            <div>
+              <div class="version-modal-subhead">
+                <span id="vh-doc-code" class="doc-code-badge">QT-TK-01</span>
+                <span id="vh-doc-category" class="cat-badge cat-quy-trinh">Quy trình</span>
+                <span id="vh-doc-dept" class="vh-dept-tag">Bộ phận Kỹ Thuật</span>
+              </div>
+              <h3 id="vh-doc-title">Lịch sử thay đổi & Quản lý phiên bản</h3>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="btn-close-version-history" title="Đóng">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="modal-body version-history-modal-body">
+          <!-- CURRENT ACTIVE VERSION CALLOUT -->
+          <div class="active-version-highlight-card">
+            <div class="avh-header">
+              <div class="avh-badge-row">
+                <span class="pulse-dot green"></span>
+                <span class="avh-status-text">BẢN ĐANG ÁP DỤNG HIỆN HÀNH</span>
+                <span id="vh-active-version-tag" class="avh-version-pill">v3.2</span>
+              </div>
+              <div class="avh-actions">
+                <a id="vh-active-download-btn" href="#" target="_blank" class="btn primary btn-sm" title="Tải trực tiếp bản mới nhất">
+                  <i data-lucide="download"></i>
+                  <span>Tải bản mới nhất</span>
+                </a>
+                <button id="vh-active-preview-btn" class="btn secondary btn-sm" title="Xem trước tài liệu">
+                  <i data-lucide="eye"></i>
+                  <span>Xem trước</span>
+                </button>
+              </div>
+            </div>
+            
+            <div class="avh-content">
+              <div class="avh-info-row">
+                <div class="avh-info-item">
+                  <i data-lucide="calendar"></i>
+                  <span>Ban hành: <strong id="vh-active-date">10/10/2026</strong></span>
+                </div>
+                <div class="avh-info-item">
+                  <i data-lucide="user-check"></i>
+                  <span>Người duyệt: <strong id="vh-active-author">Ban Giám Đốc</strong></span>
+                </div>
+              </div>
+              <div class="avh-reason-box">
+                <div class="avh-reason-label"><i data-lucide="sparkles"></i> Lý do cập nhật & Thay đổi chính:</div>
+                <p id="vh-active-reason">Cập nhật quy trình duyệt phối cảnh 3D bằng VR và chuẩn hóa các mốc nghiệm thu concept với Chủ đầu tư.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- TIMELINE OF ALL REVISIONS & OLD VERSIONS -->
+          <div class="revisions-timeline-section">
+            <div class="timeline-section-title">
+              <div class="tst-left">
+                <i data-lucide="git-commit"></i>
+                <span>Nhật ký các lần sửa đổi & Bản lưu trữ lịch sử (<span id="vh-revisions-count">0</span>)</span>
+              </div>
+              <div class="tst-hint">
+                <span>Tra cứu & đối soát quy chuẩn cũ</span>
+              </div>
+            </div>
+            
+            <div class="revisions-timeline-track" id="vh-timeline-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGIN / ACCOUNT SWITCH MODAL -->
+    <div id="modal-login" class="modal-backdrop hidden">
+      <div class="modal-window modal-auth">
+        <div class="sheet-drag-handle"></div>
+        <div class="modal-header">
+          <div class="modal-title">
+            <div class="auth-icon-badge">
+              <i data-lucide="lock"></i>
+            </div>
+            <div>
+              <h3>Đăng Nhập ProcessHub</h3>
+              <p>Nhập tài khoản & mật khẩu để truy cập tài liệu phân quyền bộ phận</p>
+            </div>
+          </div>
+          <button id="btn-close-login" class="modal-close-btn" title="Đóng">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="modal-body auth-modal-body">
+          <!-- Manual Login Form (Pre-filled admin / 1612 as requested) -->
+          <form id="form-login" class="auth-form" onsubmit="return false;">
+            <div class="form-group">
+              <label for="input-login-username">
+                <i data-lucide="user"></i> <strong>Tên đăng nhập (ID):</strong>
+              </label>
+              <input type="text" id="input-login-username" class="custom-input" value="admin" placeholder="Nhập tên đăng nhập..." autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <label for="input-login-password">
+                <i data-lucide="lock"></i> <strong>Mật khẩu (Password / PIN):</strong>
+              </label>
+              <div class="password-input-wrapper">
+                <input type="password" id="input-login-password" class="custom-input" value="1612" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+                <button type="button" id="btn-toggle-password-visibility" class="btn-eye" title="Hiện/ẩn mật khẩu">
+                  <i data-lucide="eye" id="eye-icon"></i>
+                </button>
+              </div>
+              <small class="form-hint">Mật khẩu điền sẵn lập trình: <code>1612</code></small>
+            </div>
+
+            <div id="login-error-msg" class="login-error hidden"></div>
+
+            <div class="auth-actions">
+              <button type="submit" id="btn-submit-login" class="btn primary btn-auth-submit">
+                <i data-lucide="log-in"></i>
+                <span>Đăng Nhập Ngay</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Quick Account Switcher Chips for Easy Testing -->
+          <div class="quick-accounts-section">
+            <label class="quick-accounts-label">
+              <i data-lucide="zap"></i> Hoặc chọn nhanh tài khoản bộ phận để kiểm thử:
+            </label>
+            <div class="quick-accounts-grid">
+              <button type="button" class="quick-user-chip active" data-username="admin" data-password="1612">
+                <span class="quick-chip-icon">👑</span>
+                <div class="quick-chip-text">
+                  <strong>admin</strong>
+                  <small>Ban Giám Đốc (*)</small>
+                </div>
+              </button>
+              <button type="button" class="quick-user-chip" data-username="thietke" data-password="1612">
+                <span class="quick-chip-icon">🏛️</span>
+                <div class="quick-chip-text">
+                  <strong>thietke</strong>
+                  <small>Thiết Kế + Sản Xuất</small>
+                </div>
+              </button>
+              <button type="button" class="quick-user-chip" data-username="sanxuat" data-password="1612">
+                <span class="quick-chip-icon">🏭</span>
+                <div class="quick-chip-text">
+                  <strong>sanxuat</strong>
+                  <small>Sản Xuất + Thiết Kế</small>
+                </div>
+              </button>
+              <button type="button" class="quick-user-chip" data-username="kinhdoanh" data-password="1612">
+                <span class="quick-chip-icon">💼</span>
+                <div class="quick-chip-text">
+                  <strong>kinhdoanh</strong>
+                  <small>Kinh Doanh + Thiết Kế</small>
+                </div>
+              </button>
+              <button type="button" class="quick-user-chip" data-username="hcns" data-password="1612">
+                <span class="quick-chip-icon">📑</span>
+                <div class="quick-chip-text">
+                  <strong>hcns</strong>
+                  <small>Hành Chính - Nhân Sự</small>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Account Card (Shown when logged in) -->
+          <div class="current-account-card" id="current-account-card" style="display: none;">
+            <div class="account-card-left">
+              <div class="account-avatar-large">
+                <i data-lucide="shield-check" id="auth-current-avatar"></i>
+              </div>
+              <div class="account-card-info">
+                <div class="account-name-badge">
+                  <strong id="auth-current-name">Ban Giám Đốc</strong>
+                  <span class="account-role-tag" id="auth-current-role">Toàn quyền (Admin)</span>
+                </div>
+                <div class="account-dept-sub" id="auth-current-dept">Bộ phận: Ban Giám Đốc</div>
+                <div class="account-allowed-pill" id="auth-current-allowed">
+                  <i data-lucide="eye"></i> <span>Xem: Tất cả 5 bộ phận (*)</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" id="btn-logout" class="btn secondary btn-logout-card" title="Đăng xuất khỏi tài khoản này">
+              <i data-lucide="log-out"></i>
+              <span>Đăng Xuất</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+      <button class="mobile-nav-item active" id="mobile-nav-home" title="Xem tất cả tài liệu">
+        <i data-lucide="layout-grid"></i>
+        <span>Tất cả</span>
+      </button>
+      <button class="mobile-nav-item" id="mobile-nav-search" title="Tìm kiếm">
+        <i data-lucide="search"></i>
+        <span>Tìm kiếm</span>
+      </button>
+      <button class="mobile-nav-item" id="mobile-nav-user" title="Tài khoản & Phân quyền">
+        <i data-lucide="user-check"></i>
+        <span>Tài khoản</span>
+      </button>
+      <button class="mobile-nav-item" id="mobile-nav-sync" title="Làm mới dữ liệu">
+        <i data-lucide="refresh-cw"></i>
+        <span>Đồng bộ</span>
+      </button>
+      <button class="mobile-nav-item" id="mobile-nav-settings" title="Cài đặt hệ thống (Nguồn Sheets, AI...)">
+        <i data-lucide="settings"></i>
+        <span>Cài đặt</span>
+      </button>
+    </nav>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
