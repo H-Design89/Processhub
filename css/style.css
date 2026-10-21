@@ -2591,6 +2591,21 @@ a {
   animation: robot-float 2.5s ease-in-out infinite alternate;
 }
 
+.ai-btn-custom-avatar {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+  animation: robot-float 2.5s ease-in-out infinite alternate;
+  vertical-align: middle;
+  pointer-events: none;
+  transition: transform var(--transition-base);
+}
+
+.ai-assistant-btn:hover .ai-btn-custom-avatar {
+  transform: scale(1.18) rotate(5deg);
+}
+
 @keyframes robot-float {
   0% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-3px) rotate(-4deg); }
@@ -3792,6 +3807,11 @@ a {
     padding: 0.5rem 0.85rem;
     font-size: 0.775rem;
     box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+  }
+
+  .ai-btn-custom-avatar {
+    width: 24px;
+    height: 24px;
   }
 
   /* Toast Notification Placement on Mobile */
