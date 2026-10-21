@@ -205,15 +205,15 @@ a {
   transition: transform var(--transition-fast);
 }
 
-.nav-sync-cloud-btn .cloud-shape {
-  transition: stroke var(--transition-fast), fill var(--transition-fast);
+.nav-sync-cloud-btn .cloud-solid-body {
+  transition: fill var(--transition-fast), filter var(--transition-fast);
 }
 
 .nav-sync-cloud-btn .cloud-check-mark {
-  transition: stroke var(--transition-fast), opacity var(--transition-fast);
+  transition: opacity var(--transition-fast), stroke var(--transition-fast);
 }
 
-/* Synced State: Vibrant Blue Cloud (#0284C7 / #38BDF8) */
+/* Synced State: Solid Vibrant Blue Gradient Cloud */
 .nav-sync-cloud-btn.is-synced {
   background: rgba(2, 132, 199, 0.08);
   border-color: rgba(2, 132, 199, 0.32);
@@ -224,26 +224,17 @@ a {
   border-color: rgba(56, 189, 248, 0.4);
 }
 
-.nav-sync-cloud-btn.is-synced .cloud-shape {
-  stroke: #0284c7;
-  fill: url(#cloudBlueGrad);
-}
-
-[data-theme="dark"] .nav-sync-cloud-btn.is-synced .cloud-shape {
-  stroke: #38bdf8;
-  fill: rgba(56, 189, 248, 0.22);
+.nav-sync-cloud-btn.is-synced .cloud-solid-body {
+  fill: url(#cloudSyncedGrad);
+  filter: drop-shadow(0 2px 4px rgba(2, 132, 199, 0.35));
 }
 
 .nav-sync-cloud-btn.is-synced .cloud-check-mark {
-  stroke: #0284c7;
+  stroke: #FFFFFF;
   opacity: 1;
 }
 
-[data-theme="dark"] .nav-sync-cloud-btn.is-synced .cloud-check-mark {
-  stroke: #38bdf8;
-}
-
-/* Not Synced State: Elegant Slate Gray Cloud (#9CA3AF) */
+/* Not Synced State: Solid Slate Gray Gradient Cloud */
 .nav-sync-cloud-btn.not-synced {
   background: rgba(156, 163, 175, 0.08);
   border-color: rgba(156, 163, 175, 0.25);
@@ -254,24 +245,18 @@ a {
   border-color: rgba(156, 163, 175, 0.25);
 }
 
-.nav-sync-cloud-btn.not-synced .cloud-shape {
-  stroke: #9ca3af;
-  fill: url(#cloudGrayGrad);
-}
-
-[data-theme="dark"] .nav-sync-cloud-btn.not-synced .cloud-shape {
-  stroke: #9ca3af;
-  fill: rgba(156, 163, 175, 0.12);
+.nav-sync-cloud-btn.not-synced .cloud-solid-body {
+  fill: url(#cloudUnsyncedGrad);
+  filter: none;
 }
 
 .nav-sync-cloud-btn.not-synced .cloud-check-mark {
-  stroke: #9ca3af;
   opacity: 0;
 }
 
 /* Hover effects */
 .nav-sync-cloud-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
 }
 
 .nav-sync-cloud-btn.is-synced:hover {
