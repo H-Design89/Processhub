@@ -66,18 +66,6 @@ const DEFAULT_MOCK_DOCUMENTS = [
     tags: ["bản vẽ", "cad", "revit", "tiêu chuẩn nét", "khung tên", "hồ sơ thi công"]
   },
   {
-    id: "doc-bv-01",
-    code: "BV-TK-01",
-    title: "Bộ bản vẽ thiết kế thi công điển hình & chi tiết cấu tạo nội thất",
-    department: "Bộ phận Kỹ Thuật",
-    category: "Bản vẽ",
-    version: "v1.0",
-    updatedAt: "2026-10-18",
-    driveUrl: "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing",
-    description: "Tập hợp bản vẽ mặt bằng bố trí công năng, mặt cắt chi tiết đồ gỗ nội thất, chi tiết liên kết kim loại và bản vẽ kỹ thuật xưởng sản xuất H-Design.",
-    tags: ["bản vẽ", "cad", "chi tiết cấu tạo", "mặt bằng", "kỹ thuật"]
-  },
-  {
     id: "doc-3",
     code: "HD-SX-01",
     title: "Hướng dẫn vận hành máy CNC, máy dán cạnh & kiểm soát chất lượng gia công xưởng",
@@ -1172,23 +1160,8 @@ const DataStore = {
               }
             });
 
-            // Đảm bảo tài liệu HD-SX-03 (Gắn tem inox) luôn có mặt kể cả khi dùng cache cũ
-            const hasTemInox = parsed.some(d => (d.code || '').toUpperCase() === 'HD-SX-03' || (d.title || '').includes('TEM INOX'));
-            if (!hasTemInox) {
-              const temDoc = DEFAULT_MOCK_DOCUMENTS.find(d => d.code === 'HD-SX-03');
-              if (temDoc) {
-                parsed = [temDoc, ...parsed];
-              }
-            }
-
-            // Đảm bảo có ít nhất 1 tài liệu mẫu loại "Bản vẽ" nếu chưa có
-            const hasBanVe = parsed.some(d => d.category === 'Bản vẽ');
-            if (!hasBanVe) {
-              const bvDoc = DEFAULT_MOCK_DOCUMENTS.find(d => d.category === 'Bản vẽ');
-              if (bvDoc) {
-                parsed.push(bvDoc);
-              }
-            }
+            // Loại bỏ hoàn toàn tài liệu mẫu BV-TK-01 nếu còn lưu trong cache
+            parsed = parsed.filter(d => (d.code || '').trim().toUpperCase() !== 'BV-TK-01');
 
             return parsed;
           }
