@@ -180,9 +180,23 @@ function cacheDomElements() {
   DOM.submitEditIcon = document.getElementById('submit-edit-icon');
   DOM.submitEditText = document.getElementById('submit-edit-text');
 
+  // Delete Document Modal & Controls (Admin only)
+  DOM.modalDeleteConfirm = document.getElementById('modal-delete-confirm');
+  DOM.btnCloseDeleteModal = document.getElementById('btn-close-delete-modal');
+  DOM.btnCancelDelete = document.getElementById('btn-cancel-delete');
+  DOM.btnConfirmDelete = document.getElementById('btn-confirm-delete');
+  DOM.confirmDeleteIcon = document.getElementById('confirm-delete-icon');
+  DOM.confirmDeleteText = document.getElementById('confirm-delete-text');
+  DOM.delDocCode = document.getElementById('del-doc-code');
+  DOM.delDocTitle = document.getElementById('del-doc-title');
+  DOM.delDocCategory = document.getElementById('del-doc-category');
+  DOM.delDocDept = document.getElementById('del-doc-dept');
+  DOM.delDocDesc = document.getElementById('del-doc-desc');
+
   // Preview Modal
   DOM.modalPreview = document.getElementById('modal-preview');
   DOM.btnClosePreview = document.getElementById('btn-close-preview');
+  DOM.btnPreviewDelete = document.getElementById('btn-preview-delete');
   DOM.previewTitle = document.getElementById('preview-title');
   DOM.previewMeta = document.getElementById('preview-meta');
   DOM.previewBadgeCategory = document.getElementById('preview-badge-category');
@@ -220,7 +234,9 @@ function cacheDomElements() {
   DOM.vhTimelineContainer = document.getElementById('vh-timeline-container');
   DOM.btnPreviewViewHistory = document.getElementById('btn-preview-view-history');
   DOM.btnDownloadVersionHistorySample = document.getElementById('btn-download-version-history-sample');
+  DOM.btnDownloadUsersSample = document.getElementById('btn-download-users-sample');
   DOM.btnDownloadAppsScript = document.getElementById('btn-download-apps-script');
+  DOM.quickAccountsGrid = document.getElementById('quick-accounts-grid');
 
   // Toast
   DOM.toastContainer = document.getElementById('toast-container');
@@ -434,31 +450,150 @@ function bindEventListeners() {
   }
 
   // Settings Modal Events
-  DOM.btnOpenSettings.addEventListener('click', openSettingsModal);
-  DOM.btnFooterGuide.addEventListener('click', openSettingsModal);
-  DOM.btnCloseSettings.addEventListener('click', closeSettingsModal);
-  DOM.btnCancelSettings.addEventListener('click', closeSettingsModal);
+  if (DOM.btnOpenSettings) DOM.btnOpenSettings.addEventListener('click', openSettingsModal);
+  if (DOM.btnFooterGuide) DOM.btnFooterGuide.addEventListener('click', openSettingsModal);
+  if (DOM.btnCloseSettings) DOM.btnCloseSettings.addEventListener('click', closeSettingsModal);
+  if (DOM.btnCancelSettings) DOM.btnCancelSettings.addEventListener('click', closeSettingsModal);
 
   // Click outside modal to close
-  DOM.modalSettings.addEventListener('click', (e) => {
-    if (e.target === DOM.modalSettings) closeSettingsModal();
-  });
+  if (DOM.modalSettings) {
+    DOM.modalSettings.addEventListener('click', (e) => {
+      if (e.target === DOM.modalSettings) closeSettingsModal();
+    });
+  }
 
-  DOM.btnTestSheet.addEventListener('click', testSheetConnection);
-  DOM.btnSaveSettings.addEventListener('click', saveAndSyncSheet);
+  // Copy Sheet & AI URLs
+  const btnCopySheetUrl = document.getElementById('btn-copy-sheet-url');
+  if (btnCopySheetUrl) {
+    btnCopySheetUrl.addEventListener('click', () => {
+      const currentConfig = DataStore.getSheetConfig();
+      const rawSheetUrl = (currentConfig && (currentConfig.rawInput || currentConfig.sheetId)) || DEFAULT_SHEET_CONFIG.sheetId;
+      navigator.clipboard.writeText(rawSheetUrl).then(() => {
+        showToast('Đã sao chép link nguồn Google Sheets vào bộ nhớ tạm!', 'success');
+      }).catch(() => {
+        showToast('Không thể sao chép link tự động.', 'error');
+      });
+    });
+  }
 
-  DOM.btnDownloadCsvSample.addEventListener('click', downloadCsvSample);
-  DOM.btnFooterTemplate.addEventListener('click', downloadCsvSample);
+  const btnCopyAiUrl = document.getElementById('btn-copy-ai-url');
+  if (btnCopyAiUrl) {
+    btnCopyAiUrl.addEventListener('click', () => {
+      const aiUrl = DataStore.getAiAssistantUrl();
+      navigator.clipboard.writeText(aiUrl).then(() => {
+        showToast('Đã sao chép link Trợ lý AI NotebookLM vào bộ nhớ tạm!', 'success');
+      }).catch(() => {
+        showToast('Không thể sao chép link tự động.', 'error');
+      });
+    });
+  }
 
-  DOM.btnUseMockData.addEventListener('click', () => {
-    DataStore.clearCustomDocuments();
-    AppState.allDocuments = DEFAULT_MOCK_DOCUMENTS;
-    updateDataStatusBadge(true, 'Dữ liệu mẫu nội bộ');
-    populateDepartmentOptions();
-    applyFiltersAndRender();
-    closeSettingsModal();
-    showToast('Đã chuyển về sử dụng bộ dữ liệu mẫu', 'info');
-  });
+  // Toggle Edit Sheet Section
+  const btnToggleSheetEdit = document.getElementById('btn-toggle-sheet-edit');
+  const boxEditSheet = document.getElementById('box-edit-sheet');
+  if (btnToggleSheetEdit && boxEditSheet) {
+    btnToggleSheetEdit.addEventListener('click', () => {
+      boxEditSheet.classList.toggle('hidden');
+      initLucideIcons();
+    });
+  }
+
+  const btnCancelSheetEdit = document.getElementById('btn-cancel-sheet-edit');
+  if (btnCancelSheetEdit && boxEditSheet) {
+    btnCancelSheetEdit.addEventListener('click', () => {
+      boxEditSheet.classList.add('hidden');
+    });
+  }
+
+  // Toggle Edit AI Section
+  const btnToggleAiEdit = document.getElementById('btn-toggle-ai-edit');
+  const boxEditAi = document.getElementById('box-edit-ai');
+  const inputAiUrl = document.getElementById('input-ai-url');
+  const btnSaveAiUrl = document.getElementById('btn-save-ai-url');
+  const aiConnectionStatus = document.getElementById('ai-connection-status');
+
+  if (btnToggleAiEdit && boxEditAi) {
+    btnToggleAiEdit.addEventListener('click', () => {
+      boxEditAi.classList.toggle('hidden');
+      if (!boxEditAi.classList.contains('hidden') && inputAiUrl) {
+        inputAiUrl.value = DataStore.getAiAssistantUrl();
+        inputAiUrl.focus();
+      }
+      initLucideIcons();
+    });
+  }
+
+  if (btnSaveAiUrl && inputAiUrl) {
+    btnSaveAiUrl.addEventListener('click', async () => {
+      const newUrl = inputAiUrl.value.trim();
+      if (!newUrl || !newUrl.startsWith('http')) {
+        showToast('Vui lòng nhập đường link hợp lệ (bắt đầu bằng https://)', 'warning');
+        return;
+      }
+
+      btnSaveAiUrl.disabled = true;
+      btnSaveAiUrl.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Đang lưu...';
+      if (aiConnectionStatus) {
+        aiConnectionStatus.className = 'connection-status-msg info';
+        aiConnectionStatus.textContent = 'Đang đồng bộ link AI lên Google Sheet...';
+        aiConnectionStatus.classList.remove('hidden');
+      }
+
+      // 1. Lưu cục bộ ngay
+      DataStore.setAiAssistantUrl(newUrl);
+
+      // 2. Cập nhật giao diện hiển thị ngay lập tức
+      const viewAiUrl = document.getElementById('view-ai-url');
+      if (viewAiUrl) viewAiUrl.textContent = newUrl;
+      const linkOpenAi = document.getElementById('link-open-ai');
+      if (linkOpenAi) linkOpenAi.href = newUrl;
+
+      // 3. Đồng bộ lên Google Sheet (Web App)
+      try {
+        const syncResult = await DataStore.syncAiUrlToGoogleSheet(newUrl);
+        if (syncResult && syncResult.synced) {
+          showToast('Đã lưu & đồng bộ thành công link Trợ lý AI lên Google Sheet!', 'success');
+          if (aiConnectionStatus) {
+            aiConnectionStatus.className = 'connection-status-msg success';
+            aiConnectionStatus.textContent = 'Đã lưu và đồng bộ link AI lên Google Sheet thành công!';
+          }
+          setTimeout(() => {
+            if (boxEditAi) boxEditAi.classList.add('hidden');
+          }, 1500);
+        } else {
+          showToast(syncResult.message || 'Đã lưu link AI vào trình duyệt thành công!', 'success');
+          if (aiConnectionStatus) {
+            aiConnectionStatus.className = 'connection-status-msg warning';
+            aiConnectionStatus.textContent = syncResult.message || 'Đã lưu trên máy!';
+          }
+        }
+      } catch (err) {
+        showToast('Đã lưu trên trình duyệt! (' + err.message + ')', 'info');
+      } finally {
+        btnSaveAiUrl.disabled = false;
+        btnSaveAiUrl.innerHTML = '<i data-lucide="save"></i> Lưu & Đồng bộ';
+        initLucideIcons();
+      }
+    });
+  }
+
+  if (DOM.btnTestSheet) DOM.btnTestSheet.addEventListener('click', testSheetConnection);
+  if (DOM.btnSaveSettings) DOM.btnSaveSettings.addEventListener('click', saveAndSyncSheet);
+
+  if (DOM.btnDownloadCsvSample) DOM.btnDownloadCsvSample.addEventListener('click', downloadCsvSample);
+  if (DOM.btnFooterTemplate) DOM.btnFooterTemplate.addEventListener('click', downloadCsvSample);
+
+  if (DOM.btnUseMockData) {
+    DOM.btnUseMockData.addEventListener('click', () => {
+      DataStore.clearCustomDocuments();
+      AppState.allDocuments = DEFAULT_MOCK_DOCUMENTS;
+      updateDataStatusBadge(true, 'Dữ liệu mẫu nội bộ');
+      populateDepartmentOptions();
+      applyFiltersAndRender();
+      closeSettingsModal();
+      showToast('Đã chuyển về sử dụng bộ dữ liệu mẫu', 'info');
+    });
+  }
 
   // Preview Modal Events
   DOM.btnClosePreview.addEventListener('click', closePreviewModal);
@@ -488,6 +623,9 @@ function bindEventListeners() {
   }
   if (DOM.btnDownloadVersionHistorySample) {
     DOM.btnDownloadVersionHistorySample.addEventListener('click', downloadVersionHistorySampleCsv);
+  }
+  if (DOM.btnDownloadUsersSample) {
+    DOM.btnDownloadUsersSample.addEventListener('click', downloadUsersSampleCsv);
   }
   if (DOM.btnDownloadAppsScript) {
     DOM.btnDownloadAppsScript.addEventListener('click', downloadAppsScriptFile);
@@ -564,6 +702,31 @@ function bindEventListeners() {
   }
   if (DOM.formEditDoc) {
     DOM.formEditDoc.addEventListener('submit', handleEditDocSubmit);
+  }
+
+  // Delete Document Confirmation Modal Events
+  if (DOM.btnCloseDeleteModal) {
+    DOM.btnCloseDeleteModal.addEventListener('click', closeDeleteConfirmModal);
+  }
+  if (DOM.btnCancelDelete) {
+    DOM.btnCancelDelete.addEventListener('click', closeDeleteConfirmModal);
+  }
+  if (DOM.modalDeleteConfirm) {
+    DOM.modalDeleteConfirm.addEventListener('click', (e) => {
+      if (e.target === DOM.modalDeleteConfirm) {
+        closeDeleteConfirmModal();
+      }
+    });
+  }
+  if (DOM.btnConfirmDelete) {
+    DOM.btnConfirmDelete.addEventListener('click', handleExecuteDelete);
+  }
+  if (DOM.btnPreviewDelete) {
+    DOM.btnPreviewDelete.addEventListener('click', () => {
+      if (AppState.activePreviewDoc) {
+        openDeleteConfirmModal(AppState.activePreviewDoc);
+      }
+    });
   }
 
   // Category Pills (Horizontal touch bar)
@@ -651,10 +814,7 @@ function bindEventListeners() {
  * Open NotebookLM AI Assistant (Strictly opens AI in a new tab)
  */
 function openAiAssistant() {
-  const storedUrl = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL);
-  const defaultUrl = (typeof DEFAULT_NOTEBOOKLM_URL !== 'undefined') ? DEFAULT_NOTEBOOKLM_URL : '';
-  const targetUrl = (storedUrl && storedUrl.includes('/notebook/')) ? storedUrl.trim() : defaultUrl || 'https://notebooklm.google.com/';
-
+  const targetUrl = DataStore.getAiAssistantUrl();
   window.open(targetUrl, '_blank');
   showToast('Đang mở sổ tay Trợ lý AI NotebookLM H-Design...', 'info');
 }
@@ -1185,6 +1345,7 @@ function renderDocumentsDisplay() {
  * Render Grid Cards
  */
 function renderGridCards(docs) {
+  const isAdmin = AuthStore.isAdmin(AppState.currentUser);
   DOM.documentsGrid.innerHTML = docs.map(doc => {
     const isFav = DataStore.isFavorite(doc.id);
     const catClass = getCategoryClass(doc.category);
@@ -1239,6 +1400,14 @@ function renderGridCards(docs) {
                     title="Sửa link Google Drive & thông tin">
               <i data-lucide="edit-3"></i>
             </button>
+            ${isAdmin ? `
+              <button class="btn-card-delete" 
+                      data-id="${doc.id}" 
+                      data-code="${escapeHtml(doc.code)}" 
+                      title="Xóa tài liệu này (Chỉ Admin)">
+                <i data-lucide="trash-2"></i>
+              </button>
+            ` : ''}
             <button class="btn-card-preview" 
                     data-id="${doc.id}" 
                     title="Xem chi tiết & xem trước tài liệu">
@@ -1283,6 +1452,20 @@ function renderGridCards(docs) {
     });
   });
 
+  // Delete button on Card (Admin only)
+  DOM.documentsGrid.querySelectorAll('.btn-card-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!AuthStore.isAdmin(AppState.currentUser)) {
+        showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+        return;
+      }
+      const id = btn.getAttribute('data-id');
+      const doc = AppState.allDocuments.find(d => d.id === id);
+      if (doc) openDeleteConfirmModal(doc);
+    });
+  });
+
   // Version History Chip click
   DOM.documentsGrid.querySelectorAll('.btn-version-history-chip').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1295,7 +1478,7 @@ function renderGridCards(docs) {
   // Whole card click (tap anywhere on card to view details on mobile & desktop)
   DOM.documentsGrid.querySelectorAll('.doc-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-card-favorite') || e.target.closest('.btn-download-direct') || e.target.closest('.btn-version-history-chip') || e.target.closest('.btn-card-edit')) {
+      if (e.target.closest('.btn-card-favorite') || e.target.closest('.btn-download-direct') || e.target.closest('.btn-version-history-chip') || e.target.closest('.btn-card-edit') || e.target.closest('.btn-card-delete')) {
         return;
       }
       const id = card.getAttribute('data-id');
@@ -1414,6 +1597,20 @@ function renderTableRows(docs) {
     });
   });
 
+  // Attach row event listeners (Delete - Admin only)
+  DOM.documentsTableBody.querySelectorAll('.btn-table-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!AuthStore.isAdmin(AppState.currentUser)) {
+        showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+        return;
+      }
+      const id = btn.getAttribute('data-id');
+      const doc = AppState.allDocuments.find(d => d.id === id);
+      if (doc) openDeleteConfirmModal(doc);
+    });
+  });
+
   // Attach version history button click
   DOM.documentsTableBody.querySelectorAll('.btn-version-history-chip').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1428,6 +1625,7 @@ function renderTableRows(docs) {
  * Generate HTML string for a single table row (Works seamlessly on desktop table and mobile row-card)
  */
 function generateTableRowHtml(doc, idx, isCollapsed, groupName) {
+  const isAdmin = AuthStore.isAdmin(AppState.currentUser);
   const catClass = getCategoryClass(doc.category);
   const deptMeta = DEPARTMENT_COLORS[doc.department] || { icon: 'building', border: '#4F46E5', text: '#4F46E5' };
   const directDownloadUrl = getDriveDownloadUrl(doc.driveUrl);
@@ -1475,6 +1673,15 @@ function generateTableRowHtml(doc, idx, isCollapsed, groupName) {
                   aria-label="Chỉnh sửa">
             <i data-lucide="edit-3"></i>
           </button>
+          ${isAdmin ? `
+            <button class="table-btn delete btn-table-delete" 
+                    data-id="${doc.id}" 
+                    data-code="${escapeHtml(doc.code)}" 
+                    title="Xóa tài liệu này (Chỉ Admin)"
+                    aria-label="Xóa tài liệu">
+              <i data-lucide="trash-2"></i>
+            </button>
+          ` : ''}
           <a href="${directDownloadUrl}" 
              target="_blank" 
              rel="noopener noreferrer" 
@@ -1595,6 +1802,15 @@ function openPreviewModal(doc) {
   // Favorite button state
   const isFav = DataStore.isFavorite(doc.id);
   DOM.btnPreviewFav.classList.toggle('is-fav', isFav);
+
+  // Delete button state (Admin only)
+  if (DOM.btnPreviewDelete) {
+    if (AuthStore.isAdmin(AppState.currentUser)) {
+      DOM.btnPreviewDelete.classList.remove('hidden');
+    } else {
+      DOM.btnPreviewDelete.classList.add('hidden');
+    }
+  }
 
   // Render dynamic links list and setup initial preview
   renderPreviewLinks(doc, 0);
@@ -1803,17 +2019,72 @@ function updateAuthUI() {
     }
   }
 
-  // Update quick switch chip active styling
-  document.querySelectorAll('.quick-user-chip').forEach(chip => {
-    const chipUser = chip.getAttribute('data-username');
-    if (user && chipUser === user.username) {
-      chip.classList.add('active');
-    } else {
-      chip.classList.remove('active');
-    }
-  });
+  // Update dynamic quick switch chips based on AuthStore.getAccounts() (supports Google Sheets sync)
+  renderQuickAccountsGrid();
+
+  // Settings button strictly for Admin / Ban Giám Đốc only
+  const isAdmin = AuthStore.isAdmin(user);
+  if (DOM.btnOpenSettings) {
+    DOM.btnOpenSettings.classList.toggle('hidden', !isAdmin);
+  }
+  if (DOM.mobileNavSettings) {
+    DOM.mobileNavSettings.classList.toggle('hidden', !isAdmin);
+  }
+  if (DOM.btnFooterGuide) {
+    DOM.btnFooterGuide.classList.toggle('hidden', !isAdmin);
+  }
+
+  // If settings modal is open and user is not admin, close it immediately
+  if (!isAdmin && DOM.modalSettings && !DOM.modalSettings.classList.contains('hidden')) {
+    closeSettingsModal();
+  }
 
   initLucideIcons();
+}
+
+/**
+ * Render Quick Account Switcher Chips dynamically based on AuthStore.getAccounts()
+ */
+function renderQuickAccountsGrid() {
+  const container = DOM.quickAccountsGrid || document.getElementById('quick-accounts-grid');
+  if (!container) return;
+
+  const accounts = AuthStore.getAccounts();
+  const currentUser = AppState.currentUser;
+
+  container.innerHTML = accounts.map(acc => {
+    const isActive = currentUser && currentUser.username.toLowerCase() === acc.username.toLowerCase();
+    let emoji = '💼';
+    if (acc.role === 'Admin' || acc.username.toLowerCase() === 'admin') emoji = '👑';
+    else if (acc.department.includes('Kỹ Thuật') || acc.department.includes('Thiết Kế')) emoji = '🏛️';
+    else if (acc.department.includes('Sản Xuất')) emoji = '🏭';
+    else if (acc.department.includes('Kinh Doanh')) emoji = '💼';
+    else if (acc.department.includes('Hành Chính') || acc.department.includes('Nhân Sự')) emoji = '📑';
+
+    const shortAllowed = (acc.allowedDepartments && acc.allowedDepartments.includes('*'))
+      ? 'Toàn quyền (*)'
+      : (acc.allowedDepartments ? acc.allowedDepartments.map(d => d.replace('Bộ phận ', '')).join(' + ') : acc.department);
+
+    return `
+      <button type="button" class="quick-user-chip ${isActive ? 'active' : ''}" data-username="${escapeHtml(acc.username)}" data-password="${escapeHtml(acc.password)}">
+        <span class="quick-chip-icon">${emoji}</span>
+        <div class="quick-chip-text">
+          <strong>${escapeHtml(acc.username)}</strong>
+          <small>${escapeHtml(shortAllowed)}</small>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.quick-user-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const uName = chip.getAttribute('data-username');
+      const uPass = chip.getAttribute('data-password');
+      if (DOM.inputLoginUsername) DOM.inputLoginUsername.value = uName;
+      if (DOM.inputLoginPassword) DOM.inputLoginPassword.value = uPass;
+      handleLoginSubmit();
+    });
+  });
 }
 
 function openLoginModal(isMandatory = false) {
@@ -1911,16 +2182,65 @@ function handleLogout() {
  * Settings Modal Controller
  */
 function openSettingsModal() {
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Chỉ tài khoản Ban Giám Đốc (Admin) mới có quyền xem Cài đặt hệ thống.', 'warning');
+    return;
+  }
+
   const currentConfig = DataStore.getSheetConfig();
-  if (currentConfig) {
-    DOM.inputSheetUrl.value = currentConfig.rawInput || currentConfig.sheetId || '';
-    DOM.inputSheetTab.value = currentConfig.tabName || '';
+  const rawSheetUrl = (currentConfig && (currentConfig.rawInput || currentConfig.sheetId)) || DEFAULT_SHEET_CONFIG.sheetId;
+  const currentAiUrl = DataStore.getAiAssistantUrl();
+
+  // Populate Link 1: Sheet URL & Open Link
+  const viewSheetUrl = document.getElementById('view-sheet-url');
+  if (viewSheetUrl) {
+    viewSheetUrl.textContent = rawSheetUrl;
   }
-  const inputNotebookLm = document.getElementById('input-notebooklm-url');
-  if (inputNotebookLm) {
-    inputNotebookLm.value = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL) || (typeof DEFAULT_NOTEBOOKLM_URL !== 'undefined' ? DEFAULT_NOTEBOOKLM_URL : '');
+  const linkOpenSheet = document.getElementById('link-open-sheet');
+  if (linkOpenSheet) {
+    linkOpenSheet.href = rawSheetUrl;
   }
-  DOM.sheetConnectionStatus.classList.add('hidden');
+
+  // Populate Link 2: AI URL & Open Link
+  const viewAiUrl = document.getElementById('view-ai-url');
+  if (viewAiUrl) {
+    viewAiUrl.textContent = currentAiUrl;
+  }
+  const linkOpenAi = document.getElementById('link-open-ai');
+  if (linkOpenAi) {
+    linkOpenAi.href = currentAiUrl;
+  }
+
+  // Pre-fill collapsible edit sheet fields if admin opens edit mode
+  if (DOM.inputSheetUrl) {
+    DOM.inputSheetUrl.value = (currentConfig && (currentConfig.rawInput || currentConfig.sheetId)) || '';
+  }
+  if (DOM.inputSheetTab) {
+    DOM.inputSheetTab.value = (currentConfig && currentConfig.tabName) || '';
+  }
+
+  // Reset collapsible edit boxes to hidden by default
+  const boxEditSheet = document.getElementById('box-edit-sheet');
+  if (boxEditSheet) {
+    boxEditSheet.classList.add('hidden');
+  }
+  if (DOM.sheetConnectionStatus) {
+    DOM.sheetConnectionStatus.classList.add('hidden');
+  }
+
+  const boxEditAi = document.getElementById('box-edit-ai');
+  if (boxEditAi) {
+    boxEditAi.classList.add('hidden');
+  }
+  const inputAiUrl = document.getElementById('input-ai-url');
+  if (inputAiUrl) {
+    inputAiUrl.value = currentAiUrl;
+  }
+  const aiConnectionStatus = document.getElementById('ai-connection-status');
+  if (aiConnectionStatus) {
+    aiConnectionStatus.classList.add('hidden');
+  }
+
   DOM.modalSettings.classList.remove('hidden');
   initLucideIcons();
 }
@@ -1930,8 +2250,9 @@ function closeSettingsModal() {
 }
 
 async function testSheetConnection() {
+  if (!DOM.inputSheetUrl) return;
   const rawInput = DOM.inputSheetUrl.value.trim();
-  const tabName = DOM.inputSheetTab.value.trim();
+  const tabName = DOM.inputSheetTab ? DOM.inputSheetTab.value.trim() : '';
   const sheetId = extractSheetId(rawInput);
 
   if (!sheetId) {
@@ -1950,31 +2271,21 @@ async function testSheetConnection() {
 }
 
 async function saveAndSyncSheet() {
+  if (!DOM.inputSheetUrl) return;
   const rawInput = DOM.inputSheetUrl.value.trim();
-  const tabName = DOM.inputSheetTab.value.trim();
+  const tabName = DOM.inputSheetTab ? DOM.inputSheetTab.value.trim() : '';
   const sheetId = extractSheetId(rawInput);
 
-  // Save NotebookLM URL
-  const inputNotebookLm = document.getElementById('input-notebooklm-url');
-  if (inputNotebookLm) {
-    const lmUrl = inputNotebookLm.value.trim();
-    if (lmUrl) {
-      localStorage.setItem(STORAGE_KEYS.NOTEBOOKLM_URL, lmUrl);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.NOTEBOOKLM_URL);
-    }
-  }
-
   if (!sheetId) {
-    // If only updating NotebookLM or general settings
-    closeSettingsModal();
-    showToast('Đã lưu cài đặt Trợ lý AI NotebookLM!', 'success');
+    showToast('Vui lòng nhập đường dẫn Google Sheets hoặc Web App hợp lệ.', 'warning');
     return;
   }
 
   try {
-    DOM.btnSaveSettings.disabled = true;
-    DOM.btnSaveSettings.textContent = 'Đang đồng bộ...';
+    if (DOM.btnSaveSettings) {
+      DOM.btnSaveSettings.disabled = true;
+      DOM.btnSaveSettings.textContent = 'Đang đồng bộ...';
+    }
 
     const docs = await fetchGoogleSheetData(sheetId, tabName);
     
@@ -1982,6 +2293,15 @@ async function saveAndSyncSheet() {
     DataStore.setSheetConfig({ rawInput, sheetId, tabName });
     DataStore.setDocuments(docs);
     AppState.allDocuments = docs;
+
+    // Update view text immediately
+    const viewSheetUrl = document.getElementById('view-sheet-url');
+    if (viewSheetUrl) viewSheetUrl.textContent = rawInput || sheetId;
+    const linkOpenSheet = document.getElementById('link-open-sheet');
+    if (linkOpenSheet) linkOpenSheet.href = rawInput || sheetId;
+
+    const boxEditSheet = document.getElementById('box-edit-sheet');
+    if (boxEditSheet) boxEditSheet.classList.add('hidden');
 
     updateDataStatusBadge(true, 'Đã đồng bộ Google Sheets');
     populateDepartmentOptions();
@@ -1991,8 +2311,10 @@ async function saveAndSyncSheet() {
   } catch (err) {
     showToast(err.message || 'Đồng bộ thất bại. Vui lòng kiểm tra lại cấu hình.', 'error');
   } finally {
-    DOM.btnSaveSettings.disabled = false;
-    DOM.btnSaveSettings.innerHTML = '<i data-lucide="save"></i> Lưu & Đồng bộ ngay';
+    if (DOM.btnSaveSettings) {
+      DOM.btnSaveSettings.disabled = false;
+      DOM.btnSaveSettings.innerHTML = '<i data-lucide="save"></i> Lưu & Đồng bộ';
+    }
     initLucideIcons();
   }
 }
@@ -2332,6 +2654,30 @@ QC-AT-01,v1.0,2024-09-01,2025-11-15,Đã thay thế,Ban Quản Lý,"Quy định 
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
   showToast('Đã tải xuống file CSV mẫu Lịch Sử Phiên Bản (Tab 2)', 'success');
+}
+
+/**
+ * Generate & Download CSV Template for Tab 4: TaiKhoan & PhanQuyen
+ */
+function downloadUsersSampleCsv() {
+  const csvContent = 
+`Tên đăng nhập (ID),Mật khẩu (Pass / PIN),Họ và tên hiển thị,Phòng ban chính,Vai trò (Role),Quyền xem bộ phận (Allowed),Ghi chú
+admin,1612,Ban Giám Đốc,Ban Giám Đốc,Admin,*,Toàn quyền quản trị & xem tất cả 5 bộ phận
+kythuat,1612,Kỹ Sư Hoàng (Kỹ Thuật),Bộ phận Kỹ Thuật,User,"Bộ phận Kỹ Thuật, Bộ phận Sản Xuất",Xem hồ sơ Kỹ Thuật & Sản Xuất
+sanxuat,1612,Quản Đốc Nam (Sản Xuất),Bộ phận Sản Xuất,User,"Bộ phận Sản Xuất, Bộ phận Kỹ Thuật",Xem hồ sơ Sản Xuất & Kỹ Thuật
+kinhdoanh,1612,Sale Mai (Kinh Doanh),Bộ phận Kinh Doanh,User,"Bộ phận Kinh Doanh, Bộ phận Kỹ Thuật",Xem hồ sơ Kinh Doanh & Kỹ Thuật
+hcns,1612,HR Lan (Hành Chính - NS),Hành Chính - Nhân Sự,User,Hành Chính - Nhân Sự,Chỉ xem phòng Hành Chính - Nhân Sự`;
+
+  const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'ProcessHub_Template_Tab4_TaiKhoan_PhanQuyen.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  showToast('Đã tải xuống file CSV mẫu Tài Khoản & Phân Quyền (Tab 4)', 'success');
 }
 
 async function downloadAppsScriptFile() {
@@ -2814,6 +3160,107 @@ async function handleEditDocSubmit(e) {
     }
   }
 }
+
+/**
+ * ==============================================================================
+ * DELETE DOCUMENT CONTROLLERS (ADMIN ONLY)
+ * ==============================================================================
+ */
+let pendingDeleteDoc = null;
+
+function openDeleteConfirmModal(doc) {
+  if (!doc) return;
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+    return;
+  }
+
+  pendingDeleteDoc = doc;
+
+  if (DOM.delDocCode) DOM.delDocCode.textContent = doc.code || 'DOC';
+  if (DOM.delDocTitle) DOM.delDocTitle.textContent = doc.title || '';
+  if (DOM.delDocDesc) DOM.delDocDesc.textContent = doc.description || 'Chưa có mô tả tóm tắt.';
+  if (DOM.delDocCategory) {
+    DOM.delDocCategory.textContent = doc.category || 'Quy trình';
+    DOM.delDocCategory.className = `cat-badge ${getCategoryClass(doc.category)}`;
+  }
+  if (DOM.delDocDept) {
+    DOM.delDocDept.textContent = doc.department || '';
+  }
+
+  if (DOM.confirmDeleteText) DOM.confirmDeleteText.textContent = 'Xác Nhận Xóa';
+  if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.disabled = false;
+
+  if (DOM.modalDeleteConfirm) {
+    DOM.modalDeleteConfirm.classList.remove('hidden');
+    initLucideIcons();
+  }
+}
+
+function closeDeleteConfirmModal() {
+  pendingDeleteDoc = null;
+  if (DOM.modalDeleteConfirm) {
+    DOM.modalDeleteConfirm.classList.add('hidden');
+  }
+}
+
+async function handleExecuteDelete() {
+  if (!pendingDeleteDoc) return;
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Bạn không có quyền thực hiện thao tác này!', 'warning');
+    closeDeleteConfirmModal();
+    return;
+  }
+
+  const docToDelete = pendingDeleteDoc;
+  const docCode = docToDelete.code || '';
+  const docId = docToDelete.id;
+
+  // Show loading state
+  if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.disabled = true;
+  if (DOM.confirmDeleteText) DOM.confirmDeleteText.textContent = 'Đang xóa...';
+
+  try {
+    // 1. Delete from DataStore (LocalStorage & in-memory)
+    DataStore.deleteDocument(docId, docCode);
+
+    // 2. Update AppState
+    AppState.allDocuments = AppState.allDocuments.filter(d => 
+      d.id !== docId && (d.code || '').trim().toUpperCase() !== docCode.trim().toUpperCase()
+    );
+
+    // 3. Close modals
+    closeDeleteConfirmModal();
+
+    if (DOM.modalPreview && !DOM.modalPreview.classList.contains('hidden') && AppState.activePreviewDoc && AppState.activePreviewDoc.id === docId) {
+      closePreviewModal();
+    }
+
+    // 4. Re-render UI
+    populateDepartmentOptions();
+    applyFiltersAndRender();
+
+    showToast(`Đã xóa quy trình [${docCode}] khỏi hệ thống!`, 'success');
+
+    // 5. Send delete sync to Google Sheets (Web App)
+    const syncRes = await DataStore.syncDeleteToGoogleSheet(docToDelete);
+    if (syncRes && syncRes.isWebApp) {
+      if (syncRes.synced) {
+        showToast(syncRes.message || `Đã đồng bộ xóa [${docCode}] trên Google Sheet!`, 'success');
+      } else {
+        showToast(syncRes.message, 'warning');
+      }
+    }
+
+  } catch (err) {
+    console.error('Lỗi khi xóa tài liệu:', err);
+    showToast(`Lỗi khi xóa tài liệu: ${err.message}`, 'error');
+  } finally {
+    if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.disabled = false;
+    if (DOM.confirmDeleteText) DOM.confirmDeleteText.textContent = 'Xác Nhận Xóa';
+  }
+}
+
 
 
 

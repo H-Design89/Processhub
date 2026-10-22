@@ -13,7 +13,9 @@ const STORAGE_KEYS = {
   THEME: 'processhub_theme',
   LAST_SYNC: 'processhub_last_sync',
   AUTH_USER: 'processhub_auth_user',
-  NOTEBOOKLM_URL: 'processhub_notebooklm_url'
+  REMOTE_ACCOUNTS: 'processhub_remote_accounts',
+  NOTEBOOKLM_URL: 'processhub_notebooklm_url',
+  SHEET_AI_URL: 'processhub_sheet_ai_url'
 };
 
 // Default NotebookLM AI Assistant Link (Sổ tay Trợ lý AI chính thức của H-Design)
@@ -439,7 +441,35 @@ const DEFAULT_ACCOUNTS = [
  */
 const AuthStore = {
   getAccounts() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.REMOTE_ACCOUNTS);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Lỗi đọc remote accounts:', e);
+    }
     return DEFAULT_ACCOUNTS;
+  },
+
+  setRemoteAccounts(accounts) {
+    if (!Array.isArray(accounts) || accounts.length === 0) return;
+    try {
+      localStorage.setItem(STORAGE_KEYS.REMOTE_ACCOUNTS, JSON.stringify(accounts));
+      // Nếu user đang đăng nhập có trong danh sách mới, cập nhật lại thông tin quyền và họ tên
+      const current = this.getCurrentUser();
+      if (current) {
+        const updated = accounts.find(a => a.username.toLowerCase() === current.username.toLowerCase());
+        if (updated) {
+          this.setCurrentUser(updated);
+        }
+      }
+    } catch (e) {
+      console.error('Không thể lưu remote accounts:', e);
+    }
   },
 
   getCurrentUser() {
@@ -483,7 +513,8 @@ const AuthStore = {
     const cleanUser = (username || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
 
-    const user = DEFAULT_ACCOUNTS.find(u => 
+    const accounts = this.getAccounts();
+    const user = accounts.find(u => 
       u.username.toLowerCase() === cleanUser && u.password === cleanPass
     );
 
@@ -491,13 +522,18 @@ const AuthStore = {
       this.setCurrentUser(user);
       return { success: true, user };
     }
-    return { success: false, message: 'Sai tên đăng nhập hoặc mật khẩu! (Mật khẩu mặc định: 1612)' };
+    return { success: false, message: 'Sai tên đăng nhập hoặc mật khẩu! Vui lòng kiểm tra lại.' };
   },
 
   canAccessDepartment(user, deptName) {
     if (!user) return false;
     if (user.allowedDepartments.includes('*')) return true;
     return user.allowedDepartments.includes(deptName);
+  },
+
+  isAdmin(user) {
+    if (!user) return false;
+    return user.role === 'Admin' || user.username === 'admin' || (Array.isArray(user.allowedDepartments) && user.allowedDepartments.includes('*'));
   },
 
   filterAllowedDocuments(docs, user) {
@@ -727,6 +763,70 @@ function parseCsv(csvText) {
 }
 
 /**
+ * Utility: Parse Accounts & Permissions from CSV rows (Tab TaiKhoan)
+ */
+function parseAccountsCsv(rows) {
+  if (!rows || rows.length < 2) return [];
+  const headers = rows[0].map(h => (h || '').toString().toLowerCase().trim());
+  let colUser = -1, colPass = -1, colName = -1, colDept = -1, colRole = -1, colAllowed = -1;
+  headers.forEach((h, idx) => {
+    const norm = h.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+    if (colUser === -1 && (norm.includes('user') || norm.includes('dangnhap') || norm.includes('id') || norm.includes('ten'))) colUser = idx;
+    else if (colPass === -1 && (norm.includes('pass') || norm.includes('matkhau') || norm.includes('pin'))) colPass = idx;
+    else if (colName === -1 && (norm.includes('ho') || norm.includes('hienthi') || norm.includes('name'))) colName = idx;
+    else if (colDept === -1 && (norm.includes('phong') || norm.includes('bophan') || norm.includes('dept'))) colDept = idx;
+    else if (colRole === -1 && (norm.includes('vaitro') || norm.includes('role') || norm.includes('quyen'))) colRole = idx;
+    else if (colAllowed === -1 && (norm.includes('xem') || norm.includes('allowed') || norm.includes('truycap'))) colAllowed = idx;
+  });
+
+  if (colUser === -1) colUser = 0;
+  if (colPass === -1) colPass = 1;
+  if (colName === -1) colName = 2;
+  if (colDept === -1) colDept = 3;
+  if (colRole === -1) colRole = 4;
+  if (colAllowed === -1) colAllowed = 5;
+
+  const accounts = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const username = (row[colUser] || '').toString().trim();
+    const password = (row[colPass] || '').toString().trim();
+    if (!username) continue;
+
+    const fullName = (row[colName] || username).toString().trim();
+    const department = (row[colDept] || 'Bộ phận Sản Xuất').toString().trim();
+    const role = (row[colRole] || 'User').toString().trim();
+    const rawAllowed = (row[colAllowed] || '').toString().trim();
+
+    let allowedList = [];
+    if (!rawAllowed || rawAllowed.includes('*') || role.toLowerCase() === 'admin' || username.toLowerCase() === 'admin') {
+      allowedList = ['*'];
+    } else {
+      allowedList = rawAllowed.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    let icon = 'user-check';
+    if (role.toLowerCase() === 'admin' || username.toLowerCase() === 'admin') icon = 'shield-check';
+    else if (department.includes('Kỹ Thuật') || department.includes('Thiết Kế')) icon = 'pen-tool';
+    else if (department.includes('Sản Xuất')) icon = 'hammer';
+    else if (department.includes('Kinh Doanh')) icon = 'briefcase';
+    else if (department.includes('Hành Chính') || department.includes('Nhân Sự')) icon = 'users';
+
+    accounts.push({
+      id: 'user-' + username.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      username,
+      password,
+      fullName,
+      department,
+      role: (role.toLowerCase() === 'admin' || username.toLowerCase() === 'admin') ? 'Admin' : 'User',
+      allowedDepartments: allowedList,
+      avatarIcon: icon
+    });
+  }
+  return accounts;
+}
+
+/**
  * Normalize and map CSV headers flexibly (supports various Vietnamese and English column names)
  */
 function mapHeaderIndex(headers) {
@@ -801,6 +901,24 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
       DataStore.setVersionHistory(result.history);
     }
 
+    // Tự động nhận link AI Assistant từ Google Sheets Web App nếu có
+    if (result.notebookLmUrl && typeof result.notebookLmUrl === 'string' && result.notebookLmUrl.trim()) {
+      const remoteAiUrl = result.notebookLmUrl.trim();
+      localStorage.setItem(STORAGE_KEYS.SHEET_AI_URL, remoteAiUrl);
+      
+      const currentManualUrl = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL);
+      // Chỉ ghi đè vào NOTEBOOKLM_URL nếu máy chưa có, hoặc máy đang dùng link mặc định, hoặc remote đã được người dùng đổi mới khác link mẫu
+      if (!currentManualUrl || currentManualUrl === DEFAULT_NOTEBOOKLM_URL || remoteAiUrl !== DEFAULT_NOTEBOOKLM_URL) {
+        localStorage.setItem(STORAGE_KEYS.NOTEBOOKLM_URL, remoteAiUrl);
+      }
+    }
+
+    // Tự động nhận danh sách Tài Khoản & Phân Quyền từ Google Sheets (Tab TaiKhoan) nếu có
+    if (result.users && Array.isArray(result.users) && result.users.length > 0) {
+      AuthStore.setRemoteAccounts(result.users);
+      console.log(`Đã đồng bộ ${result.users.length} tài khoản từ Google Sheets (Tab TaiKhoan)`);
+    }
+
     return result.documents || [];
   }
 
@@ -808,6 +926,60 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
   let csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
   if (tabName && tabName.trim()) {
     csvUrl += `&sheet=${encodeURIComponent(tabName.trim())}`;
+  }
+
+  // Quét linh hoạt các Tab cấu hình trên Google Sheets (CauHinhHeThong, CauHinh, Settings...)
+  const potentialTabNames = ['CauHinhHeThong', 'CauHinh', 'Cau Hinh', 'CaiDat', 'Settings', 'Config'];
+  for (let t = 0; t < potentialTabNames.length; t++) {
+    try {
+      const configCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(potentialTabNames[t])}`;
+      const confRes = await fetch(configCsvUrl, { headers: { 'Accept': 'text/csv, text/plain, */*' } });
+      if (confRes.ok) {
+        const confCsv = await confRes.text();
+        const confRows = parseCsv(confCsv);
+        if (confRows && confRows.length > 0) {
+          let foundAi = false;
+          for (let r = 0; r < confRows.length; r++) {
+            for (let c = 0; c < confRows[r].length; c++) {
+              const cell = (confRows[r][c] || '').trim();
+              if (cell.includes('notebooklm.google.com') || (cell.startsWith('http') && (confRows[r][0] || '').toLowerCase().includes('ai'))) {
+                localStorage.setItem(STORAGE_KEYS.SHEET_AI_URL, cell);
+                localStorage.setItem(STORAGE_KEYS.NOTEBOOKLM_URL, cell);
+                foundAi = true;
+                break;
+              }
+            }
+            if (foundAi) break;
+          }
+          if (foundAi) break;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Quét linh hoạt các Tab Tài Khoản & Phân Quyền trên Google Sheets (TaiKhoan, PhanQuyen, Users...)
+  const potentialUserTabs = ['TaiKhoan', 'PhanQuyen', 'NguoiDung', 'Users', 'Accounts'];
+  for (let u = 0; u < potentialUserTabs.length; u++) {
+    try {
+      const userCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(potentialUserTabs[u])}`;
+      const userRes = await fetch(userCsvUrl, { headers: { 'Accept': 'text/csv, text/plain, */*' } });
+      if (userRes.ok) {
+        const userCsv = await userRes.text();
+        const userRows = parseCsv(userCsv);
+        if (userRows && userRows.length >= 2) {
+          const parsedAccounts = parseAccountsCsv(userRows);
+          if (parsedAccounts.length > 0) {
+            AuthStore.setRemoteAccounts(parsedAccounts);
+            console.log(`Đã đồng bộ ${parsedAccounts.length} tài khoản từ Tab ${potentialUserTabs[u]}`);
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   const response = await fetch(csvUrl, {
@@ -1094,6 +1266,33 @@ const DataStore = {
     localStorage.removeItem(STORAGE_KEYS.DOCUMENTS_CACHE);
     localStorage.removeItem(STORAGE_KEYS.VERSION_HISTORY_CACHE);
     localStorage.removeItem(STORAGE_KEYS.SHEET_CONFIG);
+    localStorage.removeItem(STORAGE_KEYS.SHEET_AI_URL);
+  },
+
+  /**
+   * Lấy đường link Trợ lý AI NotebookLM
+   * Ưu tiên 1: Link được đồng bộ tự động từ Google Sheets (Tab CauHinhHeThong)
+   * Ưu tiên 2: Link cấu hình thủ công tại trình duyệt (nếu có)
+   * Ưu tiên 3: Link mặc định ban đầu của hệ thống
+   */
+  getAiAssistantUrl() {
+    const manualUrl = localStorage.getItem(STORAGE_KEYS.NOTEBOOKLM_URL);
+    if (manualUrl && manualUrl.trim()) {
+      return manualUrl.trim();
+    }
+    const sheetAiUrl = localStorage.getItem(STORAGE_KEYS.SHEET_AI_URL);
+    if (sheetAiUrl && sheetAiUrl.trim()) {
+      return sheetAiUrl.trim();
+    }
+    return (typeof DEFAULT_NOTEBOOKLM_URL !== 'undefined') ? DEFAULT_NOTEBOOKLM_URL : 'https://notebooklm.google.com/';
+  },
+
+  setAiAssistantUrl(url) {
+    if (url && url.trim()) {
+      localStorage.setItem(STORAGE_KEYS.NOTEBOOKLM_URL, url.trim());
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.NOTEBOOKLM_URL);
+    }
   },
 
   getSheetConfig() {
@@ -1337,6 +1536,147 @@ const DataStore = {
         isWebApp: true,
         error: err.message,
         message: `Đã cập nhật trên web app, nhưng chưa thể ghi vào Google Sheet (${err.message}).`
+      };
+    }
+  },
+
+  /**
+   * Xóa tài liệu khỏi DataStore (LocalStorage & in-memory)
+   */
+  deleteDocument(docId, docCode) {
+    const rawDocs = this.getDocuments();
+    const cleanCode = (docCode || '').trim().toUpperCase();
+    const filtered = rawDocs.filter(d => {
+      if (docId && d.id === docId) return false;
+      if (cleanCode && (d.code || '').trim().toUpperCase() === cleanCode) return false;
+      return true;
+    });
+    this.setDocuments(filtered);
+
+    // Xóa khỏi danh sách yêu thích nếu có
+    if (docId) {
+      const favs = this.getFavorites();
+      const favIdx = favs.indexOf(docId);
+      if (favIdx >= 0) {
+        favs.splice(favIdx, 1);
+        localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favs));
+      }
+    }
+
+    return filtered;
+  },
+
+  /**
+   * Gửi yêu cầu xóa quy trình lên Google Apps Script Web App
+   */
+  async syncDeleteToGoogleSheet(doc) {
+    const config = this.getSheetConfig();
+    const sheetId = config ? config.sheetId : null;
+    if (!sheetId || !sheetId.includes('script.google.com/macros/s/')) {
+      return { 
+        synced: false, 
+        isWebApp: false, 
+        message: 'Đã xóa trên ProcessHub. (Chưa kết nối Web App URL để xóa tự động trên Google Sheets)' 
+      };
+    }
+
+    try {
+      const currentUser = AuthStore.getCurrentUser();
+      const response = await fetch(sheetId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'deleteDocument',
+          document: doc,
+          deletedBy: currentUser ? currentUser.fullName : 'Ban Giám Đốc'
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const rawText = await response.text();
+      let resJson = null;
+      try {
+        resJson = JSON.parse(rawText);
+      } catch (e) {
+        // Response is HTML or plain error text
+      }
+
+      if (!resJson || resJson.status === 'error') {
+        const errMsg = (resJson && resJson.message) ? resJson.message : 'Máy chủ Google Apps Script trả về lỗi.';
+        return {
+          synced: false,
+          isWebApp: true,
+          error: errMsg,
+          message: `Đã xóa trên ProcessHub, nhưng chưa thể gỡ khỏi Google Sheet: ${errMsg}`
+        };
+      }
+
+      return {
+        synced: true,
+        isWebApp: true,
+        message: resJson.message || `Đã xóa thành công quy trình [${doc.code || ''}] trên Google Sheet!`
+      };
+    } catch (err) {
+      console.warn('Lỗi khi gửi yêu cầu xóa lên Google Apps Script:', err);
+      return {
+        synced: false,
+        isWebApp: true,
+        error: err.message,
+        message: `Đã xóa trên ProcessHub, nhưng chưa thể tự động gỡ khỏi Google Sheet (${err.message}).`
+      };
+    }
+  },
+
+  /**
+   * Gửi link Trợ lý AI NotebookLM lên Google Sheet để đồng bộ cho toàn bộ công ty
+   */
+  async syncAiUrlToGoogleSheet(url) {
+    const config = this.getSheetConfig();
+    const sheetId = config ? config.sheetId : null;
+    if (!sheetId || !sheetId.includes('script.google.com/macros/s/')) {
+      return { 
+        synced: false, 
+        isWebApp: false, 
+        message: 'Đã lưu trên web app. (Chưa kết nối Web App URL để ghi vào Google Sheet)' 
+      };
+    }
+
+    try {
+      const response = await fetch(sheetId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+          action: 'updateAiUrl',
+          url: url
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const rawText = await response.text();
+      let resJson = null;
+      try { resJson = JSON.parse(rawText); } catch (e) {}
+
+      return {
+        synced: true,
+        isWebApp: true,
+        message: (resJson && resJson.message) || 'Đã đồng bộ link AI lên Google Sheet thành công!'
+      };
+    } catch (err) {
+      console.warn('Lỗi khi gửi link AI lên Google Apps Script:', err);
+      return {
+        synced: false,
+        isWebApp: true,
+        error: err.message
       };
     }
   }

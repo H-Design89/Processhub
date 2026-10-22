@@ -40,7 +40,7 @@ var STATUSES = [
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('🚀 ProcessHub (H-Design)')
-    .addItem('1. Khởi tạo cấu trúc 2 Tab chuẩn (Tự động format & Tạo mẫu)', 'setupProcessHubSheets')
+    .addItem('1. Khởi tạo cấu trúc 4 Tab chuẩn (Quy trình, Lịch sử, AI, Tài khoản & Phân quyền)', 'setupProcessHubSheets')
     .addSeparator()
     .addItem('2. Nâng cấp phiên bản (Tự động chuyển bản cũ sang Lịch Sử)', 'archiveAndUpgradeVersion')
     .addItem('3. Chuẩn hóa & Kiểm tra link Google Drive', 'cleanGoogleDriveLinks')
@@ -48,7 +48,7 @@ function onOpen() {
 }
 
 /**
- * 1. KHỞI TẠO CẤU TRÚC 2 TAB CHUẨN
+ * 1. KHỞI TẠO CẤU TRÚC 4 TAB CHUẨN
  */
 function setupProcessHubSheets() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -56,7 +56,7 @@ function setupProcessHubSheets() {
 
   var confirm = ui.alert(
     'Xác nhận khởi tạo ProcessHub',
-    'Hệ thống sẽ tạo 2 Tab chuẩn: "QuyTrinhHienHanh" và "LichSuPhienBan" cùng định dạng chuyên nghiệp. Bạn có muốn tiếp tục?',
+    'Hệ thống sẽ tạo 4 Tab chuẩn: "QuyTrinhHienHanh", "LichSuPhienBan", "CauHinhHeThong" (link AI) và "TaiKhoan" (quản lý ID, Mật khẩu & Phân quyền). Bạn có muốn tiếp tục?',
     ui.ButtonSet.YES_NO
   );
 
@@ -178,8 +178,99 @@ function setupProcessHubSheets() {
   sheetHistory.setColumnWidth(8, 280); // Link bản cũ
   sheetHistory.setColumnWidth(9, 200); // Ghi chú
 
+  // --- TAB 3: CauHinhHeThong (Quản lý Link AI NotebookLM & Cài đặt hệ thống) ---
+  var sheetConfig = ss.getSheetByName('CauHinhHeThong');
+  if (!sheetConfig) {
+    sheetConfig = ss.insertSheet('CauHinhHeThong', 2);
+  }
+
+  var headersConfig = [
+    ["Tên cấu hình / Tính năng", "Giá trị thiết lập (URL / Thông tin)", "Mô tả hướng dẫn sử dụng"]
+  ];
+
+  sheetConfig.clear();
+  sheetConfig.getRange(1, 1, 1, headersConfig[0].length).setValues(headersConfig);
+
+  // Format Header Tab 3 (Màu tím Violet cao cấp)
+  var headerRangeConf = sheetConfig.getRange(1, 1, 1, headersConfig[0].length);
+  headerRangeConf.setBackground('#7C3AED')
+                 .setFontColor('#FFFFFF')
+                 .setFontWeight('bold')
+                 .setFontFamily('Plus Jakarta Sans')
+                 .setHorizontalAlignment('center')
+                 .setVerticalAlignment('middle')
+                 .setWrap(true);
+  sheetConfig.setRowHeight(1, 38);
+  sheetConfig.setFrozenRows(1);
+
+  var sampleConfigData = [
+    ["Link Trợ lý AI NotebookLM", "https://notebooklm.google.com/notebook/238a94aa-0f51-468f-8e40-84d5628f3a4f", "Dán link sổ tay NotebookLM vào ô này. Toàn bộ web ProcessHub của nhân viên sẽ tự động mở link này."],
+    ["Tên thương hiệu hệ thống", "H-Design ProcessHub", "Tên hiển thị trên thanh tiêu đề trang web"],
+    ["Hotline hỗ trợ kỹ thuật", "0900.xxx.xxx", "Số điện thoại hỗ trợ kỹ thuật nội bộ"]
+  ];
+
+  sheetConfig.getRange(2, 1, sampleConfigData.length, sampleConfigData[0].length).setValues(sampleConfigData);
+  sheetConfig.getRange("A2:A10").setFontFamily('Plus Jakarta Sans').setVerticalAlignment('middle').setFontWeight('bold');
+  sheetConfig.getRange("B2:C10").setFontFamily('Plus Jakarta Sans').setVerticalAlignment('middle');
+  sheetConfig.setColumnWidth(1, 240);
+  sheetConfig.setColumnWidth(2, 480);
+  sheetConfig.setColumnWidth(3, 400);
+
+  // --- TAB 4: TaiKhoan (Quản lý Tài Khoản Đăng Nhập, Mật Khẩu & Phân Quyền) ---
+  var sheetUsers = ss.getSheetByName('TaiKhoan');
+  if (!sheetUsers) {
+    sheetUsers = ss.insertSheet('TaiKhoan', 3);
+  }
+
+  var headersUsers = [
+    ["Tên đăng nhập (ID)", "Mật khẩu (Pass / PIN)", "Họ và tên hiển thị", "Phòng ban chính", "Vai trò (Role)", "Quyền xem bộ phận (Allowed)", "Ghi chú"]
+  ];
+
+  sheetUsers.clear();
+  sheetUsers.getRange(1, 1, 1, headersUsers[0].length).setValues(headersUsers);
+
+  // Format Header Tab 4 (Màu xanh Navy / Slate doanh nghiệp sang trọng)
+  var headerRangeUsers = sheetUsers.getRange(1, 1, 1, headersUsers[0].length);
+  headerRangeUsers.setBackground('#1E293B')
+                  .setFontColor('#FFFFFF')
+                  .setFontWeight('bold')
+                  .setFontFamily('Plus Jakarta Sans')
+                  .setHorizontalAlignment('center')
+                  .setVerticalAlignment('middle')
+                  .setWrap(true);
+  sheetUsers.setRowHeight(1, 38);
+  sheetUsers.setFrozenRows(1);
+
+  var sampleUsersData = [
+    ["admin", "1612", "Ban Giám Đốc", "Ban Giám Đốc", "Admin", "*", "Toàn quyền quản trị & xem tất cả 5 bộ phận"],
+    ["kythuat", "1612", "Kỹ Sư Hoàng (Kỹ Thuật)", "Bộ phận Kỹ Thuật", "User", "Bộ phận Kỹ Thuật, Bộ phận Sản Xuất", "Xem hồ sơ Kỹ Thuật & Sản Xuất"],
+    ["sanxuat", "1612", "Quản Đốc Nam (Sản Xuất)", "Bộ phận Sản Xuất", "User", "Bộ phận Sản Xuất, Bộ phận Kỹ Thuật", "Xem hồ sơ Sản Xuất & Kỹ Thuật"],
+    ["kinhdoanh", "1612", "Sale Mai (Kinh Doanh)", "Bộ phận Kinh Doanh", "User", "Bộ phận Kinh Doanh, Bộ phận Kỹ Thuật", "Xem hồ sơ Kinh Doanh & Kỹ Thuật"],
+    ["hcns", "1612", "HR Lan (Hành Chính - NS)", "Hành Chính - Nhân Sự", "User", "Hành Chính - Nhân Sự", "Chỉ xem phòng Hành Chính - Nhân Sự"]
+  ];
+
+  sheetUsers.getRange(2, 1, sampleUsersData.length, sampleUsersData[0].length).setValues(sampleUsersData);
+  sheetUsers.getRange(2, 1, 100, headersUsers[0].length).setFontFamily('Plus Jakarta Sans').setVerticalAlignment('middle');
+  sheetUsers.getRange("A2:B100").setHorizontalAlignment('center');
+  sheetUsers.getRange("E2:E100").setHorizontalAlignment('center');
+
+  // Dropdown cho Cột Phòng ban chính và Vai trò
+  var ruleDeptUsers = SpreadsheetApp.newDataValidation().requireValueInList(DEPARTMENTS, true).build();
+  sheetUsers.getRange("D2:D100").setDataValidation(ruleDeptUsers);
+
+  var ruleRoleUsers = SpreadsheetApp.newDataValidation().requireValueInList(["Admin", "User"], true).build();
+  sheetUsers.getRange("E2:E100").setDataValidation(ruleRoleUsers);
+
+  sheetUsers.setColumnWidth(1, 150); // ID
+  sheetUsers.setColumnWidth(2, 140); // Pass
+  sheetUsers.setColumnWidth(3, 220); // Tên
+  sheetUsers.setColumnWidth(4, 180); // Phòng ban
+  sheetUsers.setColumnWidth(5, 110); // Vai trò
+  sheetUsers.setColumnWidth(6, 290); // Quyền xem
+  sheetUsers.setColumnWidth(7, 250); // Ghi chú
+
   ss.setActiveSheet(sheetMain);
-  ui.alert('Thành công! 🎉', 'Đã khởi tạo xong cấu trúc 2 Tab chuẩn và dữ liệu mẫu của ProcessHub. Bạn có thể sử dụng ngay!', ui.ButtonSet.OK);
+  ui.alert('Thành công! 🎉', 'Đã khởi tạo xong cấu trúc 4 Tab chuẩn của ProcessHub:\n• QuyTrinhHienHanh (Danh mục quy trình)\n• LichSuPhienBan (Lưu trữ đối soát)\n• CauHinhHeThong (Quản lý đường link Trợ lý AI NotebookLM)\n• TaiKhoan (Quản lý ID, Mật khẩu & Phân quyền xem)', ui.ButtonSet.OK);
 }
 
 /**
@@ -464,13 +555,136 @@ function doGet(e) {
       }
     }
 
+    // ĐỌC CẤU HÌNH HỆ THỐNG & LINK TRỢ LÝ AI NOTEBOOKLM (Linh hoạt mọi tên tab và không dấu)
+    var notebookLmUrl = '';
+    var sheetConfig = null;
+    var allSheets = ss.getSheets();
+    for (var s = 0; s < allSheets.length; s++) {
+      var sNorm = allSheets[s].getName().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+      if (sNorm.indexOf('cauhinh') >= 0 || sNorm.indexOf('caidat') >= 0 || sNorm.indexOf('setting') >= 0 || sNorm.indexOf('config') >= 0) {
+        sheetConfig = allSheets[s];
+        break;
+      }
+    }
+
+    if (sheetConfig && sheetConfig.getLastRow() >= 1) {
+      var configData = sheetConfig.getDataRange().getValues();
+      for (var k = 0; k < configData.length; k++) {
+        var rowKey = (configData[k][0] || '').toString().toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+        var isAiRow = rowKey.indexOf('ai') >= 0 || rowKey.indexOf('notebook') >= 0 || rowKey.indexOf('troly') >= 0;
+
+        for (var col = 0; col < configData[k].length; col++) {
+          var cellVal = (configData[k][col] || '').toString().trim();
+          if (cellVal.indexOf('http://') === 0 || cellVal.indexOf('https://') === 0) {
+            if (isAiRow || cellVal.indexOf('notebooklm') >= 0 || cellVal.indexOf('notebook.google') >= 0) {
+              notebookLmUrl = cellVal;
+              break;
+            }
+          }
+        }
+        if (notebookLmUrl) break;
+      }
+    }
+
+    // Fallback: Nếu không tìm thấy, quét Tab QuyTrinhHienHanh
+    if (!notebookLmUrl && sheetMain && sheetMain.getLastRow() >= 2) {
+      for (var d = 0; d < documents.length; d++) {
+        var docItem = documents[d];
+        var itemCode = (docItem.code || '').toUpperCase();
+        var itemTitle = (docItem.title || '').toLowerCase();
+        if (itemCode === 'AI-ASSISTANT' || itemCode === 'NOTEBOOKLM' || itemTitle.indexOf('trợ lý ai') >= 0 || itemTitle.indexOf('notebooklm') >= 0) {
+          if (docItem.driveUrl) {
+            notebookLmUrl = docItem.driveUrl;
+            break;
+          }
+        }
+      }
+    }
+
+    // ĐỌC DANH SÁCH TÀI KHOẢN & PHÂN QUYỀN (TAB TAIKHOAN / PHANQUYEN / USERS)
+    var users = [];
+    var sheetUsers = null;
+    for (var su = 0; su < allSheets.length; su++) {
+      var uNorm = allSheets[su].getName().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+      if (uNorm.indexOf('taikhoan') >= 0 || uNorm.indexOf('phanquyen') >= 0 || uNorm.indexOf('user') >= 0 || uNorm.indexOf('account') >= 0 || uNorm.indexOf('nguoidung') >= 0) {
+        sheetUsers = allSheets[su];
+        break;
+      }
+    }
+
+    if (sheetUsers && sheetUsers.getLastRow() >= 2) {
+      var usersData = sheetUsers.getDataRange().getValues();
+      var uHeaders = (usersData[0] || []).map(function(h) { return (h || '').toString().toLowerCase().trim(); });
+      
+      var colUser = -1, colPass = -1, colName = -1, colUDept = -1, colRole = -1, colAllowed = -1;
+      for (var cu = 0; cu < uHeaders.length; cu++) {
+        var uh = uHeaders[cu];
+        if (colUser === -1 && (uh.indexOf('user') >= 0 || uh.indexOf('đăng nhập') >= 0 || uh.indexOf('id') >= 0 || uh.indexOf('tên') >= 0)) colUser = cu;
+        else if (colPass === -1 && (uh.indexOf('pass') >= 0 || uh.indexOf('mật khẩu') >= 0 || uh.indexOf('pin') >= 0)) colPass = cu;
+        else if (colName === -1 && (uh.indexOf('họ') >= 0 || uh.indexOf('hiển thị') >= 0 || uh.indexOf('name') >= 0)) colName = cu;
+        else if (colUDept === -1 && (uh.indexOf('phòng') >= 0 || uh.indexOf('bộ phận') >= 0 || uh.indexOf('dept') >= 0)) colUDept = cu;
+        else if (colRole === -1 && (uh.indexOf('vai trò') >= 0 || uh.indexOf('role') >= 0 || uh.indexOf('quyền') >= 0)) colRole = cu;
+        else if (colAllowed === -1 && (uh.indexOf('xem') >= 0 || uh.indexOf('allowed') >= 0 || uh.indexOf('truy cập') >= 0)) colAllowed = cu;
+      }
+
+      if (colUser === -1) colUser = 0;
+      if (colPass === -1) colPass = 1;
+      if (colName === -1) colName = 2;
+      if (colUDept === -1) colUDept = 3;
+      if (colRole === -1) colRole = 4;
+      if (colAllowed === -1) colAllowed = 5;
+
+      for (var uRow = 1; uRow < usersData.length; uRow++) {
+        var uItem = usersData[uRow];
+        var uUsername = (uItem[colUser] || '').toString().trim();
+        var uPassword = (uItem[colPass] || '').toString().trim();
+        if (!uUsername) continue;
+
+        var uFullName = (uItem[colName] || uUsername).toString().trim();
+        var uDept = (uItem[colUDept] || 'Bộ phận Sản Xuất').toString().trim();
+        var uRole = (uItem[colRole] || 'User').toString().trim();
+        var rawAllowed = (uItem[colAllowed] || '').toString().trim();
+
+        var allowedList = [];
+        if (!rawAllowed || rawAllowed.indexOf('*') >= 0 || uRole.toLowerCase() === 'admin' || uUsername.toLowerCase() === 'admin') {
+          allowedList = ['*'];
+        } else {
+          allowedList = rawAllowed.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+
+        var icon = 'user-check';
+        if (uRole.toLowerCase() === 'admin' || uUsername.toLowerCase() === 'admin') icon = 'shield-check';
+        else if (uDept.indexOf('Kỹ Thuật') >= 0 || uDept.indexOf('Thiết Kế') >= 0) icon = 'pen-tool';
+        else if (uDept.indexOf('Sản Xuất') >= 0) icon = 'hammer';
+        else if (uDept.indexOf('Kinh Doanh') >= 0) icon = 'briefcase';
+        else if (uDept.indexOf('Hành Chính') >= 0 || uDept.indexOf('Nhân Sự') >= 0) icon = 'users';
+
+        users.push({
+          id: 'user-' + uUsername.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          username: uUsername,
+          password: uPassword,
+          fullName: uFullName,
+          department: uDept,
+          role: (uRole.toLowerCase() === 'admin' || uUsername.toLowerCase() === 'admin') ? 'Admin' : 'User',
+          allowedDepartments: allowedList,
+          avatarIcon: icon
+        });
+      }
+    }
+
     var responseData = {
       status: 'success',
       totalDocuments: documents.length,
       totalHistory: history.length,
+      totalUsers: users.length,
+      notebookLmUrl: notebookLmUrl || '',
       updatedAt: new Date().toISOString(),
       documents: documents,
-      history: history
+      history: history,
+      users: users
     };
 
     return ContentService.createTextOutput(JSON.stringify(responseData))
@@ -626,7 +840,113 @@ function doPost(e) {
       }
     }
 
-    // XỬ LÝ 2: THÊM MỚI QUY TRÌNH VÀO SHEET (Mặc định)
+    // XỬ LÝ 2: XÓA QUY TRÌNH KHỎI GOOGLE SHEET (ADMIN)
+    if (action === 'deleteDocument') {
+      var lastRowDel = sheetMain.getLastRow();
+      var foundRowDel = -1;
+      var targetCodeDel = (doc.code || '').trim().toUpperCase();
+      var targetTitleDel = (doc.title || '').trim().toLowerCase();
+
+      if (lastRowDel > 1) {
+        var sheetValues = sheetMain.getRange(2, 1, lastRowDel - 1, 2).getValues();
+        for (var k = 0; k < sheetValues.length; k++) {
+          var rCode = (sheetValues[k][0] || '').toString().trim().toUpperCase();
+          var rTitle = (sheetValues[k][1] || '').toString().trim().toLowerCase();
+          if ((targetCodeDel && rCode === targetCodeDel) || (targetTitleDel && rTitle === targetTitleDel)) {
+            foundRowDel = k + 2;
+            break;
+          }
+        }
+      }
+
+      if (foundRowDel > 0) {
+        var oldDelValues = sheetMain.getRange(foundRowDel, 1, 1, 9).getValues()[0];
+        var dCode = oldDelValues[0] || targetCodeDel;
+        var dVer = oldDelValues[4] || 'v1.0';
+        var dDate = oldDelValues[5] || todayStr;
+        var dDriveUrl = oldDelValues[6] || '';
+
+        // Tự động lưu 1 dòng vào LichSuPhienBan để lưu vết kiểm toán và đối soát
+        var sheetHistDel = ss.getSheetByName('LichSuPhienBan') || ss.insertSheet('LichSuPhienBan', 1);
+        if (sheetHistDel.getLastRow() < 1) {
+          sheetHistDel.appendRow(["Mã tài liệu", "Phiên bản", "Ngày ban hành", "Ngày hết hiệu lực", "Trạng thái", "Người cập nhật / Phê duyệt", "Lý do thay đổi / Nội dung cập nhật", "Link Google Drive bản cũ", "Ghi chú"]);
+        }
+        sheetHistDel.appendRow([
+          dCode,
+          dVer,
+          dDate,
+          todayStr,
+          "Đã xóa khỏi danh mục",
+          payload.deletedBy || "Ban Giám Đốc",
+          "Xóa quy trình từ ProcessHub Web App",
+          dDriveUrl,
+          "Đã gỡ bỏ khỏi danh mục hiện hành"
+        ]);
+
+        // Xóa dòng khỏi tab QuyTrinhHienHanh
+        sheetMain.deleteRow(foundRowDel);
+
+        return ContentService.createTextOutput(JSON.stringify({
+          status: 'success',
+          message: 'Đã xóa thành công quy trình [' + targetCodeDel + '] khỏi Google Sheet và lưu vết vào Lịch Sử!',
+          document: doc
+        })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: 'warning',
+          message: 'Không tìm thấy dòng có mã [' + targetCodeDel + '] trên Google Sheet để xóa.',
+          document: doc
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // XỬ LÝ 3: CẬP NHẬT LINK TRỢ LÝ AI NOTEBOOKLM LÊN GOOGLE SHEET
+    if (action === 'updateAiUrl' || action === 'updateConfig') {
+      var newAiUrl = (payload.url || payload.notebookLmUrl || '').toString().trim();
+      var sheetConf = null;
+      var sheetsList = ss.getSheets();
+      for (var sh = 0; sh < sheetsList.length; sh++) {
+        var shNorm = sheetsList[sh].getName().toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+        if (shNorm.indexOf('cauhinh') >= 0 || shNorm.indexOf('caidat') >= 0 || shNorm.indexOf('setting') >= 0 || shNorm.indexOf('config') >= 0) {
+          sheetConf = sheetsList[sh];
+          break;
+        }
+      }
+
+      if (!sheetConf) {
+        sheetConf = ss.insertSheet('CauHinhHeThong', ss.getSheets().length);
+        sheetConf.appendRow(["Tên cấu hình / Tính năng", "Giá trị thiết lập (URL / Thông tin)", "Mô tả"]);
+      }
+
+      var lastRc = sheetConf.getLastRow();
+      var foundConfRow = -1;
+      if (lastRc >= 2) {
+        var confRows = sheetConf.getRange(2, 1, lastRc - 1, 1).getValues();
+        for (var cr = 0; cr < confRows.length; cr++) {
+          var keyNorm = (confRows[cr][0] || '').toString().toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '');
+          if (keyNorm.indexOf('notebook') >= 0 || keyNorm.indexOf('ai') >= 0 || keyNorm.indexOf('troly') >= 0) {
+            foundConfRow = cr + 2;
+            break;
+          }
+        }
+      }
+
+      if (foundConfRow > 0) {
+        sheetConf.getRange(foundConfRow, 2).setValue(newAiUrl);
+      } else {
+        sheetConf.appendRow(["Link Trợ lý AI NotebookLM", newAiUrl, "Tự động cập nhật từ ProcessHub Web App"]);
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        message: 'Đã lưu và đồng bộ thành công link Trợ lý AI NotebookLM lên Google Sheet!',
+        url: newAiUrl
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // XỬ LÝ 4: THÊM MỚI QUY TRÌNH VÀO SHEET (Mặc định)
     var newRow = [
       doc.code || '',
       doc.title || '',

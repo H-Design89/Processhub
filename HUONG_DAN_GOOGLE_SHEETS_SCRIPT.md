@@ -2,9 +2,10 @@
 
 Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Script** vào file Google Sheets của công ty. Sau khi cài đặt, Google Sheets sẽ có thêm một Menu riêng biệt: **`🚀 ProcessHub (H-Design)`** giúp bạn:
 
-1. **Khởi tạo 2 Tab chuẩn chỉ với 1 cú click:** Tự động tạo màu sắc doanh nghiệp, kẻ bảng, đóng băng tiêu đề, và tạo menu chọn thả xuống (Dropdown) cho Phòng ban, Phân loại, Trạng thái.
+1. **Khởi tạo 3 Tab chuẩn chỉ với 1 cú click:** Tự động tạo màu sắc doanh nghiệp, kẻ bảng, đóng băng tiêu đề, và tạo menu chọn thả xuống (Dropdown) cho Phòng ban, Phân loại, Trạng thái, cùng Tab Cấu hình link Trợ lý AI NotebookLM.
 2. **Nâng cấp phiên bản tự động:** Chỉ cần chọn 1 dòng quy trình, bấm nút thì bản cũ sẽ **tự động được lưu sang Tab Lịch Sử** kèm lý do thay đổi và ngày hết hiệu lực. Không lo thao tác thủ công bị nhầm lẫn!
-3. **Kiểm tra link Google Drive:** Quét và kiểm tra tính hợp lệ của toàn bộ đường link file.
+3. **Quản lý Link Trợ lý AI trực tiếp trên Sheets:** Dán đường link sổ tay NotebookLM vào Tab **`CauHinhHeThong`**, toàn bộ nhân viên công ty khi bấm nút "Trợ lý AI" trên web sẽ tự động mở đúng link này!
+4. **Kiểm tra link Google Drive:** Quét và kiểm tra tính hợp lệ của toàn bộ đường link file.
 
 ---
 
@@ -36,13 +37,19 @@ Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Scrip
 
 ## 🌟 Hướng Dẫn Sử Dụng Các Tính Năng Trong Menu
 
-### 1. Bấm `1. Khởi tạo cấu trúc 2 Tab chuẩn`:
+### 1. Bấm `1. Khởi tạo cấu trúc 4 Tab chuẩn`:
 * Khi chạy lần đầu, Google sẽ hỏi cấp quyền truy cập (*Cần có ủy quyền*):
   - Bấm **Tiếp tục (Continue)**.
   - Chọn tài khoản Google của bạn.
   - Bấm **Nâng cao (Advanced)** ở góc dưới bên trái ➔ Chọn **Đi tới ProcessHub Automation (không an toàn)**.
   - Bấm **Cho phép (Allow)**.
-* Ngay lập tức, 2 Tab **`QuyTrinhHienHanh`** và **`LichSuPhienBan`** sẽ được tạo tự động với màu sắc tím/xanh ngọc cao cấp, căn chỉnh độ rộng cột chuẩn và điền sẵn dữ liệu mẫu thực tế!
+* Ngay lập tức, **4 Tab chuẩn** sẽ được tạo tự động:
+  - **`QuyTrinhHienHanh`** (Màu tím thương hiệu Indigo): Danh mục quy trình đang áp dụng.
+  - **`LichSuPhienBan`** (Màu xanh ngọc Emerald): Lưu trữ đối soát lịch sử các phiên bản cũ hoặc tài liệu đã xóa.
+  - **`CauHinhHeThong`** (Màu tím Violet): Quản lý đường link Trợ lý AI NotebookLM của công ty. Bạn chỉ cần dán link NotebookLM mới vào cột Giá trị ở dòng 2 là xong!
+  - **`TaiKhoan`** (Màu xanh Navy Slate): Quản lý **Tên đăng nhập (ID)**, **Mật khẩu (Pass / PIN)**, **Họ tên**, **Phòng ban** và **Quyền xem các phòng ban**.
+    - Cột *Quyền xem bộ phận (Allowed)*: Điền `*` nếu xem toàn bộ 5 bộ phận (Admin), hoặc điền tên các phòng ban ngăn cách bằng dấu phẩy (VD: `Bộ phận Kỹ Thuật, Bộ phận Sản Xuất`).
+    - *💡 Mẹo bảo mật cho Ban Giám Đốc:* Nhấp chuột phải vào tên Tab **`TaiKhoan`** ➔ Chọn **Ẩn trang tính (Hide sheet)** hoặc **Bảo vệ trang tính (Protect sheet)** để chỉ riêng tài khoản của Ban Giám Đốc mới có quyền xem tab này, nhân viên mở file Sheet sẽ không nhìn thấy mật khẩu của nhau.
 
 ### 2. Bấm `2. Nâng cấp phiên bản (Tự động chuyển bản cũ sang Lịch Sử)`:
 * Khi bạn muốn sửa một quy trình (ví dụ nâng `QT-TK-01` từ `v3.2` lên `v3.3`):
