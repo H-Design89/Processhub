@@ -2,10 +2,18 @@
 
 Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Script** vào file Google Sheets của công ty. Sau khi cài đặt, Google Sheets sẽ có thêm một Menu riêng biệt: **`🚀 ProcessHub (H-Design)`** giúp bạn:
 
-1. **Khởi tạo 3 Tab chuẩn chỉ với 1 cú click:** Tự động tạo màu sắc doanh nghiệp, kẻ bảng, đóng băng tiêu đề, và tạo menu chọn thả xuống (Dropdown) cho Phòng ban, Phân loại, Trạng thái, cùng Tab Cấu hình link Trợ lý AI NotebookLM.
-2. **Nâng cấp phiên bản tự động:** Chỉ cần chọn 1 dòng quy trình, bấm nút thì bản cũ sẽ **tự động được lưu sang Tab Lịch Sử** kèm lý do thay đổi và ngày hết hiệu lực. Không lo thao tác thủ công bị nhầm lẫn!
-3. **Quản lý Link Trợ lý AI trực tiếp trên Sheets:** Dán đường link sổ tay NotebookLM vào Tab **`CauHinhHeThong`**, toàn bộ nhân viên công ty khi bấm nút "Trợ lý AI" trên web sẽ tự động mở đúng link này!
-4. **Kiểm tra link Google Drive:** Quét và kiểm tra tính hợp lệ của toàn bộ đường link file.
+1. **Khởi tạo 4 Tab chuẩn chỉ với 1 cú click:** Tự động tạo màu sắc doanh nghiệp, kẻ bảng, đóng băng tiêu đề, và tạo menu chọn thả xuống (Dropdown) cho Phòng ban, Phân loại, **Trạng thái phát hành (`Chính thức`, `Dự thảo`, `Tham khảo`)**, cùng Tab Cấu hình link Trợ lý AI NotebookLM và Phân quyền tài khoản.
+2. **Quy trình Phê duyệt & Ban hành tài liệu:**
+   - **Tài liệu Dự thảo (`Dự thảo`):** Các quy trình đang trong giai đoạn soạn thảo/thử nghiệm chỉ có tài khoản **Admin (`admin`)** mới nhìn thấy để rà soát và bấm nút **"Duyệt Phát Hành"**. Nhân viên các bộ phận và Ban Quản Lý sẽ không nhìn thấy để tránh nhầm lẫn khi vận hành.
+   - **Tài liệu Tham khảo (`Tham khảo`):** Cẩm nang, sổ tay tra cứu kỹ thuật dành cho nhân viên đọc thêm.
+   - **Tài liệu Chính thức (`Chính thức`):** Quy trình đã được phê duyệt có hiệu lực bắt buộc thi hành.
+3. **Phân quyền vai trò chuẩn xác:**
+   - **Quản Trị Viên (`admin`):** Toàn quyền Thêm, Sửa, Xóa, Cấu hình và **Duyệt phát hành tài liệu dự thảo** thành chính thức.
+   - **Ban Quản Lý (`bql`):** Được quyền xem toàn bộ 5 phòng ban, ở chế độ **Chỉ xem (Read-only)**, không hiển thị các nút Thêm/Sửa/Xóa/Duyệt.
+   - **Các bộ phận chuyên môn (`kythuat`, `sanxuat`, `kinhdoanh`, `hcns`):** Ở chế độ **Chỉ xem (Read-only)** trong phạm vi phòng ban được phân quyền.
+4. **Nâng cấp phiên bản tự động:** Chỉ cần chọn 1 dòng quy trình, bấm nút thì bản cũ sẽ **tự động được lưu sang Tab Lịch Sử** kèm lý do thay đổi và ngày hết hiệu lực. Không lo thao tác thủ công bị nhầm lẫn!
+5. **Quản lý Link Trợ lý AI trực tiếp trên Sheets:** Dán đường link sổ tay NotebookLM vào Tab **`CauHinhHeThong`**, toàn bộ nhân viên công ty khi bấm nút "Trợ lý AI" trên web sẽ tự động mở đúng link này!
+6. **Kiểm tra link Google Drive:** Quét và kiểm tra tính hợp lệ của toàn bộ đường link file.
 
 ---
 
@@ -15,8 +23,6 @@ Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Scrip
 1. Mở file Google Sheets mới hoặc file bạn đang dùng tại [Google Sheets](https://sheets.new).
 2. Trên thanh menu trên cùng của Google Sheets, chọn:  
    **Tiện ích mở rộng (Extensions)** ➔ **Apps Script**.
-
-![Menu Extensions Apps Script](https://lh3.googleusercontent.com/placeholder)
 
 ---
 
@@ -44,12 +50,13 @@ Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Scrip
   - Bấm **Nâng cao (Advanced)** ở góc dưới bên trái ➔ Chọn **Đi tới ProcessHub Automation (không an toàn)**.
   - Bấm **Cho phép (Allow)**.
 * Ngay lập tức, **4 Tab chuẩn** sẽ được tạo tự động:
-  - **`QuyTrinhHienHanh`** (Màu tím thương hiệu Indigo): Danh mục quy trình đang áp dụng.
+  - **`QuyTrinhHienHanh`** (Màu tím thương hiệu Indigo): Danh mục quy trình đang áp dụng. Cột *Trạng thái* có sẵn menu chọn thả xuống (`Chính thức`, `Dự thảo`, `Tham khảo`).
   - **`LichSuPhienBan`** (Màu xanh ngọc Emerald): Lưu trữ đối soát lịch sử các phiên bản cũ hoặc tài liệu đã xóa.
   - **`CauHinhHeThong`** (Màu tím Violet): Quản lý đường link Trợ lý AI NotebookLM của công ty. Bạn chỉ cần dán link NotebookLM mới vào cột Giá trị ở dòng 2 là xong!
-  - **`TaiKhoan`** (Màu xanh Navy Slate): Quản lý **Tên đăng nhập (ID)**, **Mật khẩu (Pass / PIN)**, **Họ tên**, **Phòng ban** và **Quyền xem các phòng ban**.
-    - Cột *Quyền xem bộ phận (Allowed)*: Điền `*` nếu xem toàn bộ 5 bộ phận (Admin), hoặc điền tên các phòng ban ngăn cách bằng dấu phẩy (VD: `Bộ phận Kỹ Thuật, Bộ phận Sản Xuất`).
-    - *💡 Mẹo bảo mật cho Ban Giám Đốc:* Nhấp chuột phải vào tên Tab **`TaiKhoan`** ➔ Chọn **Ẩn trang tính (Hide sheet)** hoặc **Bảo vệ trang tính (Protect sheet)** để chỉ riêng tài khoản của Ban Giám Đốc mới có quyền xem tab này, nhân viên mở file Sheet sẽ không nhìn thấy mật khẩu của nhau.
+  - **`TaiKhoan`** (Màu xanh Navy Slate): Quản lý **Tên đăng nhập (ID)**, **Mật khẩu (Pass / PIN)**, **Họ tên**, **Phòng ban**, **Vai trò (Role)** và **Quyền xem các phòng ban**.
+    - Cột *Vai trò (Role)*: `Admin` (Toàn quyền quản trị), `Ban Quản Lý` (Chỉ xem 5 phòng), `User` (Nhân viên chỉ xem).
+    - Cột *Quyền xem bộ phận (Allowed)*: Điền `*` nếu xem toàn bộ 5 bộ phận, hoặc điền tên các phòng ban ngăn cách bằng dấu phẩy (VD: `Bộ phận Kỹ Thuật, Bộ phận Sản Xuất`).
+    - *💡 Mẹo bảo mật cho Quản Trị Viên:* Nhấp chuột phải vào tên Tab **`TaiKhoan`** ➔ Chọn **Ẩn trang tính (Hide sheet)** hoặc **Bảo vệ trang tính (Protect sheet)** để chỉ riêng tài khoản của Admin mới có quyền xem tab này, nhân viên mở file Sheet sẽ không nhìn thấy mật khẩu của nhau.
 
 ### 2. Bấm `2. Nâng cấp phiên bản (Tự động chuyển bản cũ sang Lịch Sử)`:
 * Khi bạn muốn sửa một quy trình (ví dụ nâng `QT-TK-01` từ `v3.2` lên `v3.3`):
@@ -58,7 +65,7 @@ Tài liệu này hướng dẫn bạn cách dán đoạn mã **Google Apps Scrip
   3. Hệ thống sẽ hỏi:
      - Nhập số phiên bản mới: Gõ `v3.3`.
      - Lý do thay đổi: Gõ lý do (VD: *"Bổ sung checklist kiểm tra 3D"*).
-     - Người duyệt: Gõ tên người duyệt (VD: *"Ban Giám Đốc"*).
+     - Người duyệt: Gõ tên người duyệt (VD: *"Ban Quản Lý"*).
      - Link Drive mới: Dán link mới (hoặc để trống nếu dùng chung link).
   4. Bấm **OK**: Bản cũ `v3.2` sẽ được tự động chuyển sang Tab **`LichSuPhienBan`** với trạng thái *"Đã thay thế"*, và dòng hiện tại tự động cập nhật lên `v3.3`!
 

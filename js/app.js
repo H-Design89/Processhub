@@ -11,6 +11,7 @@ const AppState = {
   searchQuery: '',
   selectedDepartment: 'all',
   selectedCategory: 'all',
+  selectedStatus: 'all', // 'all' | 'Chính thức' | 'Dự thảo' | 'Tham khảo'
   onlyFavorites: false,
   sortBy: 'updated-desc',
   viewMode: 'table', // 'grid' | 'table' (Default: table)
@@ -71,6 +72,11 @@ function cacheDomElements() {
   DOM.btnClearSearch = document.getElementById('btn-clear-search');
   DOM.filterDept = document.getElementById('filter-dept');
   DOM.filterType = document.getElementById('filter-type');
+  DOM.filterStatus = document.getElementById('filter-status');
+  DOM.statusFilterWrapper = document.getElementById('status-filter-wrapper');
+  DOM.optFilterDraft = document.getElementById('opt-filter-draft');
+  DOM.btnPendingDrafts = document.getElementById('btn-pending-drafts');
+  DOM.pendingDraftsCount = document.getElementById('pending-drafts-count');
   DOM.btnToggleFavoriteFilter = document.getElementById('btn-toggle-favorite-filter');
   DOM.favoriteCount = document.getElementById('favorite-count');
   DOM.btnResetFilters = document.getElementById('btn-reset-filters');
@@ -145,6 +151,7 @@ function cacheDomElements() {
   DOM.addDocTitle = document.getElementById('add-doc-title');
   DOM.addDocDept = document.getElementById('add-doc-dept');
   DOM.addDocCat = document.getElementById('add-doc-cat');
+  DOM.addDocStatus = document.getElementById('add-doc-status');
   DOM.addDocVersion = document.getElementById('add-doc-version');
   DOM.addDocDate = document.getElementById('add-doc-date');
   DOM.addDocUrl = document.getElementById('add-doc-url');
@@ -168,6 +175,7 @@ function cacheDomElements() {
   DOM.editDocTitle = document.getElementById('edit-doc-title');
   DOM.editDocDept = document.getElementById('edit-doc-dept');
   DOM.editDocCat = document.getElementById('edit-doc-cat');
+  DOM.editDocStatus = document.getElementById('edit-doc-status');
   DOM.editDocVersion = document.getElementById('edit-doc-version');
   DOM.editDocDate = document.getElementById('edit-doc-date');
   DOM.editDocUrl = document.getElementById('edit-doc-url');
@@ -200,6 +208,9 @@ function cacheDomElements() {
   DOM.previewTitle = document.getElementById('preview-title');
   DOM.previewMeta = document.getElementById('preview-meta');
   DOM.previewBadgeCategory = document.getElementById('preview-badge-category');
+  DOM.previewBadgeStatus = document.getElementById('preview-badge-status');
+  DOM.previewDraftBanner = document.getElementById('preview-draft-banner');
+  DOM.btnPreviewApprove = document.getElementById('btn-preview-approve');
   DOM.previewDesc = document.getElementById('preview-desc');
   DOM.previewCode = document.getElementById('preview-code');
   DOM.previewVersion = document.getElementById('preview-version');
@@ -341,6 +352,28 @@ function bindEventListeners() {
     AppState.selectedCategory = e.target.value;
     applyFiltersAndRender();
   });
+
+  // Status Filter Dropdown
+  if (DOM.filterStatus) {
+    DOM.filterStatus.addEventListener('change', (e) => {
+      AppState.selectedStatus = e.target.value;
+      applyFiltersAndRender();
+    });
+  }
+
+  // Pending Drafts Filter Pill (Admin quick badge button)
+  if (DOM.btnPendingDrafts) {
+    DOM.btnPendingDrafts.addEventListener('click', () => {
+      if (AppState.selectedStatus === 'Dự thảo') {
+        AppState.selectedStatus = 'all';
+        if (DOM.filterStatus) DOM.filterStatus.value = 'all';
+      } else {
+        AppState.selectedStatus = 'Dự thảo';
+        if (DOM.filterStatus) DOM.filterStatus.value = 'Dự thảo';
+      }
+      applyFiltersAndRender();
+    });
+  }
 
   // Favorite Filter Toggle
   DOM.btnToggleFavoriteFilter.addEventListener('click', () => {
@@ -603,6 +636,13 @@ function bindEventListeners() {
 
   DOM.btnCopyLink.addEventListener('click', copyPreviewDocLink);
   DOM.btnPreviewFav.addEventListener('click', togglePreviewDocFav);
+  if (DOM.btnPreviewApprove) {
+    DOM.btnPreviewApprove.addEventListener('click', () => {
+      if (AppState.activePreviewDoc) {
+        handleApproveDocument(AppState.activePreviewDoc.code);
+      }
+    });
+  }
 
   // Version History Modal Events
   if (DOM.btnCloseVersionHistory) {
@@ -884,23 +924,41 @@ async function loadInitialData() {
     doc1.driveUrl = "Tài liệu Quy trình chính (PDF): https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing\nBiểu mẫu khảo sát hiện trạng BM-01 (Excel): https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing\nChecklist kiểm tra hồ sơ thiết kế: https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing";
   }
 
-  // Migrate any cached 'Bộ phận Thiết Kế' to 'Bộ phận Kỹ Thuật'
+  // Migrate any cached legacy departments ('Bộ phận Thiết Kế' -> 'Bộ phận Kỹ Thuật', 'Ban Giám Đốc' -> 'Ban Quản Lý')
   let hasDeptChanged = false;
   AppState.allDocuments.forEach(d => {
     if (d.department === 'Bộ phận Thiết Kế') {
       d.department = 'Bộ phận Kỹ Thuật';
       hasDeptChanged = true;
     }
+    if (d.department === 'Ban Giám Đốc') {
+      d.department = 'Ban Quản Lý';
+      hasDeptChanged = true;
+    }
+    if (!d.status) {
+      d.status = 'Chính thức';
+      hasDeptChanged = true;
+    }
   });
   if (AppState.currentUser) {
     if (Array.isArray(AppState.currentUser.allowedDepartments)) {
-      AppState.currentUser.allowedDepartments = AppState.currentUser.allowedDepartments.map(dept => 
-        dept === 'Bộ phận Thiết Kế' ? 'Bộ phận Kỹ Thuật' : dept
-      );
+      AppState.currentUser.allowedDepartments = AppState.currentUser.allowedDepartments.map(dept => {
+        if (dept === 'Bộ phận Thiết Kế') return 'Bộ phận Kỹ Thuật';
+        if (dept === 'Ban Giám Đốc') return 'Ban Quản Lý';
+        return dept;
+      });
     }
     if (AppState.currentUser.department === 'Bộ phận Thiết Kế' || AppState.currentUser.username === 'thietke') {
       AppState.currentUser.department = 'Bộ phận Kỹ Thuật';
       AppState.currentUser.fullName = 'Kỹ Sư Hoàng (Kỹ Thuật)';
+    }
+    if (AppState.currentUser.department === 'Ban Giám Đốc') {
+      AppState.currentUser.department = 'Ban Quản Lý';
+    }
+    if (AppState.currentUser.username === 'bgd') {
+      AppState.currentUser.username = 'bql';
+      AppState.currentUser.fullName = 'Ban Quản Lý';
+      AppState.currentUser.role = 'Ban Quản Lý';
     }
     localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(AppState.currentUser));
     updateAuthUI();
@@ -1031,6 +1089,7 @@ function resetAllFilters() {
   AppState.searchQuery = '';
   AppState.selectedDepartment = 'all';
   AppState.selectedCategory = 'all';
+  AppState.selectedStatus = 'all';
   AppState.onlyFavorites = false;
   AppState.groupBy = 'none';
   if (DOM.selectGroupBy) DOM.selectGroupBy.value = 'none';
@@ -1039,6 +1098,7 @@ function resetAllFilters() {
   DOM.btnClearSearch.classList.add('hidden');
   DOM.filterDept.value = 'all';
   DOM.filterType.value = 'all';
+  if (DOM.filterStatus) DOM.filterStatus.value = 'all';
   DOM.btnToggleFavoriteFilter.classList.remove('active');
 
   applyFiltersAndRender();
@@ -1053,6 +1113,7 @@ function applyFiltersAndRender() {
   const query = normalizeSearchString(AppState.searchQuery);
   const selectedDept = AppState.selectedDepartment;
   const selectedCat = AppState.selectedCategory;
+  const selectedStatus = AppState.selectedStatus;
   const onlyFav = AppState.onlyFavorites;
 
   let results = accessibleDocs.filter(doc => {
@@ -1070,12 +1131,20 @@ function applyFiltersAndRender() {
       }
     }
 
-    // 3. Favorites only
+    // 3. Status match
+    if (selectedStatus && selectedStatus !== 'all') {
+      const docStatus = doc.status || 'Chính thức';
+      if (docStatus !== selectedStatus) {
+        return false;
+      }
+    }
+
+    // 4. Favorites only
     if (onlyFav && !DataStore.isFavorite(doc.id)) {
       return false;
     }
 
-    // 4. Text Search Match
+    // 5. Text Search Match
     if (query.length > 0) {
       const codeMatch = normalizeSearchString(doc.code).includes(query);
       const titleMatch = normalizeSearchString(doc.title).includes(query);
@@ -1106,6 +1175,23 @@ function applyFiltersAndRender() {
   });
 
   AppState.filteredDocuments = results;
+
+  // Update pending drafts badge count for Admin
+  const isAdmin = AuthStore.isAdmin(AppState.currentUser);
+  if (isAdmin && DOM.pendingDraftsCount) {
+    const draftCount = AppState.allDocuments.filter(d => (d.status || 'Chính thức') === 'Dự thảo').length;
+    DOM.pendingDraftsCount.textContent = draftCount;
+    if (DOM.btnPendingDrafts) {
+      if (draftCount > 0) {
+        DOM.btnPendingDrafts.classList.remove('hidden');
+        DOM.btnPendingDrafts.classList.toggle('active', AppState.selectedStatus === 'Dự thảo');
+      } else {
+        DOM.btnPendingDrafts.classList.add('hidden');
+      }
+    }
+  } else if (DOM.btnPendingDrafts) {
+    DOM.btnPendingDrafts.classList.add('hidden');
+  }
 
   // Render
   renderMetrics();
@@ -1267,6 +1353,14 @@ function renderActiveFilterChips() {
     });
   }
 
+  if (AppState.selectedStatus !== 'all') {
+    addFilterChip(`Trạng thái: ${AppState.selectedStatus}`, () => {
+      AppState.selectedStatus = 'all';
+      if (DOM.filterStatus) DOM.filterStatus.value = 'all';
+      applyFiltersAndRender();
+    });
+  }
+
   if (AppState.onlyFavorites) {
     addFilterChip('Chỉ mục yêu thích', () => {
       AppState.onlyFavorites = false;
@@ -1349,6 +1443,11 @@ function renderGridCards(docs) {
   DOM.documentsGrid.innerHTML = docs.map(doc => {
     const isFav = DataStore.isFavorite(doc.id);
     const catClass = getCategoryClass(doc.category);
+    const docStatus = doc.status || 'Chính thức';
+    let statusBadgeClass = 'status-official';
+    if (docStatus === 'Dự thảo') statusBadgeClass = 'status-draft';
+    else if (docStatus === 'Tham khảo') statusBadgeClass = 'status-reference';
+
     const deptMeta = DEPARTMENT_COLORS[doc.department] || { border: '#4F46E5', text: '#4F46E5', icon: 'file-text' };
     const directDownloadUrl = getDriveDownloadUrl(doc.driveUrl);
 
@@ -1359,6 +1458,7 @@ function renderGridCards(docs) {
             <div class="doc-card-badges">
               <span class="doc-code-badge">${escapeHtml(doc.code)}</span>
               <span class="doc-cat-badge ${catClass}">${escapeHtml(doc.category)}</span>
+              <span class="doc-status-badge ${statusBadgeClass}">${escapeHtml(docStatus)}</span>
             </div>
             <button class="btn-card-favorite ${isFav ? 'is-favorite' : ''}" 
                     data-id="${doc.id}" 
@@ -1395,12 +1495,20 @@ function renderGridCards(docs) {
               <i data-lucide="download"></i>
               <span>Tải về</span>
             </a>
-            <button class="btn-card-edit" 
-                    data-id="${doc.id}" 
-                    title="Sửa link Google Drive & thông tin">
-              <i data-lucide="edit-3"></i>
-            </button>
+            ${isAdmin && docStatus === 'Dự thảo' ? `
+              <button class="btn-card-approve btn-approve-doc" 
+                      data-code="${escapeHtml(doc.code)}" 
+                      title="Duyệt phát hành chính thức quy trình này">
+                <i data-lucide="check-circle-2"></i>
+                <span>Duyệt</span>
+              </button>
+            ` : ''}
             ${isAdmin ? `
+              <button class="btn-card-edit" 
+                      data-id="${doc.id}" 
+                      title="Sửa link Google Drive & thông tin">
+                <i data-lucide="edit-3"></i>
+              </button>
               <button class="btn-card-delete" 
                       data-id="${doc.id}" 
                       data-code="${escapeHtml(doc.code)}" 
@@ -1443,7 +1551,16 @@ function renderGridCards(docs) {
     });
   });
 
-  // Edit button on Card
+  // Approve button on Card (Admin only)
+  DOM.documentsGrid.querySelectorAll('.btn-card-approve').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = btn.getAttribute('data-code');
+      handleApproveDocument(code);
+    });
+  });
+
+  // Edit button on Card (Admin only)
   DOM.documentsGrid.querySelectorAll('.btn-card-edit').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1457,7 +1574,7 @@ function renderGridCards(docs) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!AuthStore.isAdmin(AppState.currentUser)) {
-        showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+        showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền xóa tài liệu!', 'warning');
         return;
       }
       const id = btn.getAttribute('data-id');
@@ -1478,7 +1595,7 @@ function renderGridCards(docs) {
   // Whole card click (tap anywhere on card to view details on mobile & desktop)
   DOM.documentsGrid.querySelectorAll('.doc-card').forEach(card => {
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.btn-card-favorite') || e.target.closest('.btn-download-direct') || e.target.closest('.btn-version-history-chip') || e.target.closest('.btn-card-edit') || e.target.closest('.btn-card-delete')) {
+      if (e.target.closest('.btn-card-favorite') || e.target.closest('.btn-download-direct') || e.target.closest('.btn-version-history-chip') || e.target.closest('.btn-card-edit') || e.target.closest('.btn-card-delete') || e.target.closest('.btn-card-approve')) {
         return;
       }
       const id = card.getAttribute('data-id');
@@ -1588,7 +1705,16 @@ function renderTableRows(docs) {
     });
   });
 
-  // Attach row event listeners (Edit)
+  // Attach row event listeners (Approve - Admin only)
+  DOM.documentsTableBody.querySelectorAll('.btn-table-approve').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = btn.getAttribute('data-code');
+      handleApproveDocument(code);
+    });
+  });
+
+  // Attach row event listeners (Edit - Admin only)
   DOM.documentsTableBody.querySelectorAll('.btn-table-edit').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -1602,7 +1728,7 @@ function renderTableRows(docs) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!AuthStore.isAdmin(AppState.currentUser)) {
-        showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+        showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền xóa tài liệu!', 'warning');
         return;
       }
       const id = btn.getAttribute('data-id');
@@ -1627,6 +1753,11 @@ function renderTableRows(docs) {
 function generateTableRowHtml(doc, idx, isCollapsed, groupName) {
   const isAdmin = AuthStore.isAdmin(AppState.currentUser);
   const catClass = getCategoryClass(doc.category);
+  const docStatus = doc.status || 'Chính thức';
+  let statusBadgeClass = 'status-official';
+  if (docStatus === 'Dự thảo') statusBadgeClass = 'status-draft';
+  else if (docStatus === 'Tham khảo') statusBadgeClass = 'status-reference';
+
   const deptMeta = DEPARTMENT_COLORS[doc.department] || { icon: 'building', border: '#4F46E5', text: '#4F46E5' };
   const directDownloadUrl = getDriveDownloadUrl(doc.driveUrl);
   const groupClass = groupName ? `table-group-row ${isCollapsed ? 'collapsed' : ''}` : '';
@@ -1648,7 +1779,10 @@ function generateTableRowHtml(doc, idx, isCollapsed, groupName) {
         </span>
       </td>
       <td class="col-cat">
-        <span class="doc-cat-badge ${catClass}">${escapeHtml(doc.category)}</span>
+        <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
+          <span class="doc-cat-badge ${catClass}">${escapeHtml(doc.category)}</span>
+          <span class="doc-status-badge ${statusBadgeClass}">${escapeHtml(docStatus)}</span>
+        </div>
       </td>
       <td class="col-ver" style="text-align: center;">
         <button type="button" class="btn-version-history-chip" data-code="${escapeHtml(doc.code)}" title="Xem lịch sử thay đổi & lý do cập nhật (${escapeHtml(doc.version)})">
@@ -1667,13 +1801,21 @@ function generateTableRowHtml(doc, idx, isCollapsed, groupName) {
                   aria-label="Xem chi tiết">
             <i data-lucide="eye"></i>
           </button>
-          <button class="table-btn edit btn-table-edit" 
-                  data-id="${doc.id}" 
-                  title="Sửa link Google Drive & nội dung quy trình"
-                  aria-label="Chỉnh sửa">
-            <i data-lucide="edit-3"></i>
-          </button>
+          ${isAdmin && docStatus === 'Dự thảo' ? `
+            <button class="table-btn approve btn-table-approve btn-approve-doc" 
+                    data-code="${escapeHtml(doc.code)}" 
+                    title="Duyệt phát hành chính thức quy trình này"
+                    aria-label="Duyệt phát hành">
+              <i data-lucide="check-circle-2"></i>
+            </button>
+          ` : ''}
           ${isAdmin ? `
+            <button class="table-btn edit btn-table-edit" 
+                    data-id="${doc.id}" 
+                    title="Sửa link Google Drive & nội dung quy trình"
+                    aria-label="Chỉnh sửa">
+              <i data-lucide="edit-3"></i>
+            </button>
             <button class="table-btn delete btn-table-delete" 
                     data-id="${doc.id}" 
                     data-code="${escapeHtml(doc.code)}" 
@@ -1734,6 +1876,7 @@ function exportFilteredDocumentsToExcel() {
     'Tên quy trình / Hướng dẫn',
     'Phòng ban',
     'Phân loại',
+    'Trạng thái',
     'Phiên bản',
     'Ngày ban hành / Cập nhật',
     'Link Google Drive',
@@ -1756,6 +1899,7 @@ function exportFilteredDocumentsToExcel() {
       doc.title || '',
       doc.department || '',
       doc.category || '',
+      doc.status || 'Chính thức',
       doc.version || 'v1.0',
       doc.updatedAt || '',
       doc.driveUrl || '',
@@ -1793,6 +1937,27 @@ function openPreviewModal(doc) {
   DOM.previewBadgeCategory.textContent = doc.category;
   DOM.previewBadgeCategory.className = `cat-badge ${getCategoryClass(doc.category)}`;
 
+  const docStatus = doc.status || 'Chính thức';
+  if (DOM.previewBadgeStatus) {
+    DOM.previewBadgeStatus.textContent = docStatus;
+    let statusClass = 'status-official';
+    if (docStatus === 'Dự thảo') statusClass = 'status-draft';
+    else if (docStatus === 'Tham khảo') statusClass = 'status-reference';
+    DOM.previewBadgeStatus.className = `doc-status-badge ${statusClass}`;
+  }
+
+  const isAdmin = AuthStore.isAdmin(AppState.currentUser);
+  if (DOM.previewDraftBanner) {
+    if (docStatus === 'Dự thảo') {
+      DOM.previewDraftBanner.classList.remove('hidden');
+      if (DOM.btnPreviewApprove) {
+        DOM.btnPreviewApprove.classList.toggle('hidden', !isAdmin);
+      }
+    } else {
+      DOM.previewDraftBanner.classList.add('hidden');
+    }
+  }
+
   DOM.previewDesc.textContent = doc.description || 'Chưa có thông tin mô tả chi tiết.';
   DOM.previewCode.textContent = doc.code;
   DOM.previewVersion.textContent = doc.version;
@@ -1805,7 +1970,7 @@ function openPreviewModal(doc) {
 
   // Delete button state (Admin only)
   if (DOM.btnPreviewDelete) {
-    if (AuthStore.isAdmin(AppState.currentUser)) {
+    if (isAdmin) {
       DOM.btnPreviewDelete.classList.remove('hidden');
     } else {
       DOM.btnPreviewDelete.classList.add('hidden');
@@ -2006,7 +2171,13 @@ function updateAuthUI() {
       DOM.authCurrentName.textContent = user.fullName;
     }
     if (DOM.authCurrentRole) {
-      DOM.authCurrentRole.textContent = user.role === 'Admin' ? 'Toàn quyền (Admin)' : `Nhân viên (${user.department})`;
+      if (user.role === 'Admin' || user.username === 'admin') {
+        DOM.authCurrentRole.textContent = 'Toàn quyền (Admin)';
+      } else if (user.role === 'Ban Quản Lý' || user.username === 'bql' || user.department === 'Ban Quản Lý') {
+        DOM.authCurrentRole.textContent = 'Ban Quản Lý (Chỉ xem 5 bộ phận)';
+      } else {
+        DOM.authCurrentRole.textContent = `Nhân viên (${user.department}) - Chỉ xem`;
+      }
     }
     if (DOM.authCurrentDept) {
       DOM.authCurrentDept.textContent = `Bộ phận: ${user.department}`;
@@ -2022,7 +2193,7 @@ function updateAuthUI() {
   // Update dynamic quick switch chips based on AuthStore.getAccounts() (supports Google Sheets sync)
   renderQuickAccountsGrid();
 
-  // Settings button strictly for Admin / Ban Giám Đốc only
+  // Settings & Add actions strictly for Admin only
   const isAdmin = AuthStore.isAdmin(user);
   if (DOM.btnOpenSettings) {
     DOM.btnOpenSettings.classList.toggle('hidden', !isAdmin);
@@ -2032,6 +2203,22 @@ function updateAuthUI() {
   }
   if (DOM.btnFooterGuide) {
     DOM.btnFooterGuide.classList.toggle('hidden', !isAdmin);
+  }
+  if (DOM.btnToolbarAddDoc) {
+    DOM.btnToolbarAddDoc.classList.toggle('hidden', !isAdmin);
+  }
+  if (DOM.btnOpenAddDoc) {
+    DOM.btnOpenAddDoc.classList.toggle('hidden', !isAdmin);
+  }
+  if (DOM.optFilterDraft) {
+    DOM.optFilterDraft.classList.toggle('hidden', !isAdmin);
+  }
+  if (!isAdmin) {
+    if (DOM.btnPendingDrafts) DOM.btnPendingDrafts.classList.add('hidden');
+    if (AppState.selectedStatus === 'Dự thảo') {
+      AppState.selectedStatus = 'all';
+      if (DOM.filterStatus) DOM.filterStatus.value = 'all';
+    }
   }
 
   // If settings modal is open and user is not admin, close it immediately
@@ -2055,15 +2242,20 @@ function renderQuickAccountsGrid() {
   container.innerHTML = accounts.map(acc => {
     const isActive = currentUser && currentUser.username.toLowerCase() === acc.username.toLowerCase();
     let emoji = '💼';
-    if (acc.role === 'Admin' || acc.username.toLowerCase() === 'admin') emoji = '👑';
+    const isUserAdmin = acc.role === 'Admin' || acc.username.toLowerCase() === 'admin';
+    const isUserBQL = acc.role === 'Ban Quản Lý' || acc.username.toLowerCase() === 'bql' || (acc.department && acc.department.includes('Ban Quản Lý'));
+    if (isUserAdmin) emoji = '👑';
+    else if (isUserBQL) emoji = '🛡️';
     else if (acc.department.includes('Kỹ Thuật') || acc.department.includes('Thiết Kế')) emoji = '🏛️';
     else if (acc.department.includes('Sản Xuất')) emoji = '🏭';
     else if (acc.department.includes('Kinh Doanh')) emoji = '💼';
     else if (acc.department.includes('Hành Chính') || acc.department.includes('Nhân Sự')) emoji = '📑';
 
-    const shortAllowed = (acc.allowedDepartments && acc.allowedDepartments.includes('*'))
-      ? 'Toàn quyền (*)'
-      : (acc.allowedDepartments ? acc.allowedDepartments.map(d => d.replace('Bộ phận ', '')).join(' + ') : acc.department);
+    const shortAllowed = isUserAdmin
+      ? 'Quản trị & Duyệt (*)'
+      : (isUserBQL
+          ? 'Xem 5 phòng (*)'
+          : (acc.allowedDepartments ? acc.allowedDepartments.map(d => d.replace('Bộ phận ', '')).join(' + ') + ' (Chỉ xem)' : acc.department + ' (Chỉ xem)'));
 
     return `
       <button type="button" class="quick-user-chip ${isActive ? 'active' : ''}" data-username="${escapeHtml(acc.username)}" data-password="${escapeHtml(acc.password)}">
@@ -2183,7 +2375,7 @@ function handleLogout() {
  */
 function openSettingsModal() {
   if (!AuthStore.isAdmin(AppState.currentUser)) {
-    showToast('Chỉ tài khoản Ban Giám Đốc (Admin) mới có quyền xem Cài đặt hệ thống.', 'warning');
+    showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền xem Cài đặt hệ thống.', 'warning');
     return;
   }
 
@@ -2364,19 +2556,21 @@ function showConnectionStatus(isSuccess, message, isPending = false) {
  */
 function downloadCsvSample() {
   const csvContent = 
-`Mã tài liệu,Tên tài liệu,Phòng ban,Phân loại,Phiên bản,Ngày ban hành,Link Google Drive,Mô tả tóm tắt,Từ khóa
-QT-TK-01,Quy trình thiết kế phương án kiến trúc & nội thất,Bộ phận Kỹ Thuật,Quy trình,v3.2,2026-10-10,https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,"Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt phương án với chủ đầu tư đến bàn giao hồ sơ thiết kế kỹ thuật.","kiến trúc, nội thất, concept, 3d, brief"
-QC-BV-02,Quy chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit),Bộ phận Kỹ Thuật,Quy chuẩn,v2.0,2026-09-25,https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing,"Bộ tiêu chuẩn nét vẽ, tỷ lệ, ký hiệu vật liệu, quy cách đóng khung tên bản vẽ cho toàn bộ kiến trúc sư và họa viên tại H-Design.","bản vẽ, cad, revit, tiêu chuẩn nét"
-HD-SX-01,Hướng dẫn vận hành máy CNC máy dán cạnh & kiểm soát chất lượng gia công xưởng,Bộ phận Sản Xuất,Hướng dẫn,v2.5,2026-10-05,https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,"Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra đường cắt CNC, độ bám keo dán cạnh và lập biên bản kiểm tra bán thành phẩm.","sản xuất, xưởng, cnc, chất lượng, máy móc"
-QT-SX-02,Quy trình nghiệm thu vật tư gỗ cơ khí phụ kiện đầu vào & bàn giao xuất xưởng,Bộ phận Sản Xuất,Quy trình,v1.8,2026-08-30,https://drive.google.com/file/d/1D_Sample_NghiemThuVatTu_DriveFile/view?usp=sharing,"Các bước đối chiếu mẫu ván An Cường, phụ kiện Hafele/Blum thực tế với catalogue đã duyệt, kiểm tra chứng chỉ xuất xưởng trước khi gia công.","nghiệm thu, vật tư, sản xuất, gỗ, phụ kiện"
-BM-SX-01,Mẫu báo cáo tiến độ sản xuất xưởng & kế hoạch phân bổ nguồn lực tuần,Bộ phận Sản Xuất,Biểu mẫu,v4.0,2026-10-12,https://drive.google.com/file/d/1E_Sample_BieuMauTienDoDuAn_DriveFile/view?usp=sharing,"Biểu mẫu chuẩn Gantt chart và bảng theo dõi tiến độ gia công từng đơn hàng, cảnh báo rủi ro trễ tiến độ lắp đặt công trình.","tiến độ, biểu mẫu, sản xuất, gantt, báo cáo tuần"
-QT-NS-01,Quy trình tuyển dụng đào tạo & tiếp nhận nhân sự mới (Onboarding),Hành Chính - Nhân Sự,Quy trình,v2.1,2026-09-18,https://drive.google.com/file/d/1F_Sample_OnboardingHR_DriveFile/view?usp=sharing,"Hướng dẫn các bước từ phỏng vấn, thẩm định năng lực, cấp phát thiết bị làm việc, giới thiệu văn hóa doanh nghiệp đến kết thúc 2 tháng thử việc.","nhân sự, onboarding, thử việc, tuyển dụng"
-HD-HC-02,Hướng dẫn đề nghị tạm ứng thanh toán chi phí & nội quy văn phòng,Hành Chính - Nhân Sự,Hướng dẫn,v2.2,2026-10-01,https://drive.google.com/file/d/1G_Sample_TamUngThanhToan_DriveFile/view?usp=sharing,"Thời hạn gửi chứng từ hợp lệ, hạn mức chi tiêu ăn ở đi lại khi công tác, quy định giờ giấc làm việc và văn hóa ứng xử nội bộ.","hành chính, nhân sự, tạm ứng, thanh toán, nội quy"
-QC-AT-01,Quy chuẩn an toàn lao động vệ sinh công nghiệp & PCCC tại phân xưởng,Bộ phận Sản Xuất,Quy chuẩn,v3.0,2026-07-20,https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,"Quy định bắt buộc về trang bị bảo hộ cá nhân (kính, khẩu trang, găng tay), an toàn nguồn điện máy công nghiệp và phòng chống cháy nổ.","an toàn, bảo hộ, pccc, sản xuất, xưởng, vệ sinh"
-QT-KD-02,Quy trình tư vấn khách hàng lập báo giá & ký kết hợp đồng thi công,Bộ phận Kinh Doanh,Quy trình,v1.5,2026-08-14,https://drive.google.com/file/d/1I_Sample_BaoGiaHopDong_DriveFile/view?usp=sharing,"Quy định cơ chế tính giá theo đơn giá thiết kế & thi công trọn gói, thẩm quyền chiết khấu cho khách hàng và quy trình rà soát hợp đồng mẫu.","hợp đồng, báo giá, sale, khách hàng, chiết khấu"
-CS-GD-01,Chính sách bảo mật thông tin nội bộ quản lý dữ liệu & phân quyền tài liệu,Ban Giám Đốc,Chính sách,v1.2,2026-06-30,https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing,"Quy định phân quyền truy cập tài liệu giữa các bộ phận, bảo mật file thiết kế 3D/CAD của khách hàng và cam kết bảo mật NDA của nhân sự.","bảo mật, chính sách, nda, tài sản trí tuệ, giám đốc"
-BM-TK-04,Checklist kiểm tra hồ sơ thiết kế chi tiết trước khi chuyển giao xưởng sản xuất,Bộ phận Kỹ Thuật,Biểu mẫu,v2.8,2026-10-14,https://drive.google.com/file/d/1K_Sample_ChecklistDesignQA_DriveFile/view?usp=sharing,"Bảng kiểm tra 45 đầu việc kỹ thuật gồm: kích thước công thái học, khớp nối vật liệu, file cắt CNC và bảng bóc tách khối lượng phụ kiện.","checklist, qa, kiểm tra, bàn giao, hồ sơ thiết kế"
-BM-KD-01,Biểu mẫu khảo sát nhu cầu khách hàng & bảng phân tích hiện trạng dự án,Bộ phận Kinh Doanh,Biểu mẫu,v1.4,2026-09-02,https://drive.google.com/file/d/1L_Sample_ITGuide_DriveFile/view?usp=sharing,"Phiếu thu thập thông tin khách hàng: phong cách mong muốn, ngân sách đầu tư, tiến độ yêu cầu và đặc điểm mặt bằng cần cải tạo.","kinh doanh, khảo sát, brief, khách hàng, tư vấn"`;
+`Mã tài liệu,Tên tài liệu,Phòng ban,Phân loại,Phiên bản,Ngày ban hành,Link Google Drive,Mô tả tóm tắt,Từ khóa,Trạng thái
+QT-TK-01,Quy trình thiết kế phương án kiến trúc & nội thất,Bộ phận Kỹ Thuật,Quy trình,v3.2,2026-10-10,https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,"Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt phương án với chủ đầu tư đến bàn giao hồ sơ thiết kế kỹ thuật.","kiến trúc, nội thất, concept, 3d, brief",Chính thức
+TC-BV-02,Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit),Bộ phận Kỹ Thuật,Tiêu chuẩn,v2.0,2026-09-25,https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing,"Bộ tiêu chuẩn nét vẽ, tỷ lệ, ký hiệu vật liệu, quy cách đóng khung tên bản vẽ cho toàn bộ kiến trúc sư và họa viên tại H-Design.","bản vẽ, cad, revit, tiêu chuẩn nét",Chính thức
+HD-SX-01,Hướng dẫn vận hành máy CNC máy dán cạnh & kiểm soát chất lượng gia công xưởng,Bộ phận Sản Xuất,Hướng dẫn,v2.5,2026-10-05,https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,"Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra đường cắt CNC, độ bám keo dán cạnh và lập biên bản kiểm tra bán thành phẩm.","sản xuất, xưởng, cnc, chất lượng, máy móc",Chính thức
+QT-SX-02,Quy trình nghiệm thu vật tư gỗ cơ khí phụ kiện đầu vào & bàn giao xuất xưởng,Bộ phận Sản Xuất,Quy trình,v1.8,2026-08-30,https://drive.google.com/file/d/1D_Sample_NghiemThuVatTu_DriveFile/view?usp=sharing,"Các bước đối chiếu mẫu ván An Cường, phụ kiện Hafele/Blum thực tế với catalogue đã duyệt, kiểm tra chứng chỉ xuất xưởng trước khi gia công.","nghiệm thu, vật tư, sản xuất, gỗ, phụ kiện",Chính thức
+BM-SX-01,Mẫu báo cáo tiến độ sản xuất xưởng & kế hoạch phân bổ nguồn lực tuần,Bộ phận Sản Xuất,Biểu mẫu,v4.0,2026-10-12,https://drive.google.com/file/d/1E_Sample_BieuMauTienDoDuAn_DriveFile/view?usp=sharing,"Biểu mẫu chuẩn Gantt chart và bảng theo dõi tiến độ gia công từng đơn hàng, cảnh báo rủi ro trễ tiến độ lắp đặt công trình.","tiến độ, biểu mẫu, sản xuất, gantt, báo cáo tuần",Chính thức
+QT-NS-01,Quy trình tuyển dụng đào tạo & tiếp nhận nhân sự mới (Onboarding),Hành Chính - Nhân Sự,Quy trình,v2.1,2026-09-18,https://drive.google.com/file/d/1F_Sample_OnboardingHR_DriveFile/view?usp=sharing,"Hướng dẫn các bước từ phỏng vấn, thẩm định năng lực, cấp phát thiết bị làm việc, giới thiệu văn hóa doanh nghiệp đến kết thúc 2 tháng thử việc.","nhân sự, onboarding, thử việc, tuyển dụng",Chính thức
+HD-HC-02,Hướng dẫn đề nghị tạm ứng thanh toán chi phí & nội quy văn phòng,Hành Chính - Nhân Sự,Hướng dẫn,v2.2,2026-10-01,https://drive.google.com/file/d/1G_Sample_TamUngThanhToan_DriveFile/view?usp=sharing,"Thời hạn gửi chứng từ hợp lệ, hạn mức chi tiêu ăn ở đi lại khi công tác, quy định giờ giấc làm việc và văn hóa ứng xử nội bộ.","hành chính, nhân sự, tạm ứng, thanh toán, nội quy",Chính thức
+TC-AT-01,Tiêu chuẩn an toàn lao động vệ sinh công nghiệp & PCCC tại phân xưởng,Bộ phận Sản Xuất,Tiêu chuẩn,v3.0,2026-07-20,https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,"Quy định bắt buộc về trang bị bảo hộ cá nhân (kính, khẩu trang, găng tay), an toàn nguồn điện máy công nghiệp và phòng chống cháy nổ.","an toàn, bảo hộ, pccc, sản xuất, xưởng, vệ sinh",Chính thức
+QT-KD-02,Quy trình tư vấn khách hàng lập báo giá & ký kết hợp đồng thi công,Bộ phận Kinh Doanh,Quy trình,v1.5,2026-08-14,https://drive.google.com/file/d/1I_Sample_BaoGiaHopDong_DriveFile/view?usp=sharing,"Quy định cơ chế tính giá theo đơn giá thiết kế & thi công trọn gói, thẩm quyền chiết khấu cho khách hàng và quy trình rà soát hợp đồng mẫu.","hợp đồng, báo giá, sale, khách hàng, chiết khấu",Chính thức
+CS-QL-01,Chính sách bảo mật thông tin nội bộ quản lý dữ liệu & phân quyền tài liệu,Ban Quản Lý,Chính sách,v1.2,2026-06-30,https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing,"Quy định phân quyền truy cập tài liệu giữa các bộ phận, bảo mật file thiết kế 3D/CAD của khách hàng và cam kết bảo mật NDA của nhân sự.","bảo mật, chính sách, nda, tài sản trí tuệ, ban quản lý",Chính thức
+BM-TK-04,Checklist kiểm tra hồ sơ thiết kế chi tiết trước khi chuyển giao xưởng sản xuất,Bộ phận Kỹ Thuật,Biểu mẫu,v2.8,2026-10-14,https://drive.google.com/file/d/1K_Sample_ChecklistDesignQA_DriveFile/view?usp=sharing,"Bảng kiểm tra 45 đầu việc kỹ thuật gồm: kích thước công thái học, khớp nối vật liệu, file cắt CNC và bảng bóc tách khối lượng phụ kiện.","checklist, qa, kiểm tra, bàn giao, hồ sơ thiết kế",Chính thức
+BM-KD-01,Biểu mẫu khảo sát nhu cầu khách hàng & bảng phân tích hiện trạng dự án,Bộ phận Kinh Doanh,Biểu mẫu,v1.4,2026-09-02,https://drive.google.com/file/d/1L_Sample_ITGuide_DriveFile/view?usp=sharing,"Phiếu thu thập thông tin khách hàng: phong cách mong muốn, ngân sách đầu tư, tiến độ yêu cầu và đặc điểm mặt bằng cần cải tạo.","kinh doanh, khảo sát, brief, khách hàng, tư vấn",Chính thức
+QT-TK-02,Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế,Bộ phận Kỹ Thuật,Quy trình,v0.9,2026-10-22,https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,"Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ trước khi chuyển sang giai đoạn dựng hình chi tiết.","ai, thiet ke, du thao, concept, thử nghiệm",Dự thảo
+TK-VL-01,Cẩm nang tra cứu thông số kỹ thuật gỗ công nghiệp & phụ kiện nội thất 2026,Bộ phận Sản Xuất,Hướng dẫn,v1.0,2026-10-15,https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,"Tài liệu cẩm nang kỹ thuật tổng hợp quy cách ván MDF, HDF, MFC An Cường và catalog phụ kiện Hafele dùng làm căn cứ tham khảo sản xuất.","cam nang, go, an cuong, tham khao, vat tu",Tham khảo`;
 
   const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -2629,9 +2823,9 @@ function closeVersionHistoryModal() {
 function downloadVersionHistorySampleCsv() {
   const csvContent = 
 `Mã tài liệu,Phiên bản,Ngày ban hành,Ngày hết hiệu lực,Trạng thái,Người cập nhật / Phê duyệt,Lý do thay đổi / Nội dung cập nhật,Link Google Drive bản cũ,Ghi chú
-QT-TK-01,v3.2,2026-10-10,Đang áp dụng,Đang hiệu lực,Ban Giám Đốc,"Cập nhật quy trình duyệt phối cảnh 3D bằng kính VR và chuẩn hóa các mốc nghiệm thu concept với Chủ đầu tư.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Bắt buộc áp dụng cho toàn bộ dự án từ Q4/2026
+QT-TK-01,v3.2,2026-10-10,Đang áp dụng,Đang hiệu lực,Ban Quản Lý,"Cập nhật quy trình duyệt phối cảnh 3D bằng kính VR và chuẩn hóa các mốc nghiệm thu concept với Chủ đầu tư.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Bắt buộc áp dụng cho toàn bộ dự án từ Q4/2026
 QT-TK-01,v3.1,2026-05-15,2026-10-10,Đã thay thế,Trưởng phòng Thiết Kế,"Bổ sung bước lập bảng Moodboard vật liệu & màu sắc thực tế trước khi lên 3D chi tiết để giảm thời gian chỉnh sửa.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Thay thế cho bản v3.0
-QT-TK-01,v3.0,2026-01-10,2026-05-15,Đã thay thế,Ban Giám Đốc,"Nâng cấp toàn diện quy trình thiết kế tích hợp mô hình BIM/Revit đồng bộ hóa dữ liệu trực tiếp với xưởng sản xuất.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Chuyển đổi công nghệ vẽ CAD sang Revit
+QT-TK-01,v3.0,2026-01-10,2026-05-15,Đã thay thế,Ban Quản Lý,"Nâng cấp toàn diện quy trình thiết kế tích hợp mô hình BIM/Revit đồng bộ hóa dữ liệu trực tiếp với xưởng sản xuất.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Chuyển đổi công nghệ vẽ CAD sang Revit
 QT-TK-01,v2.0,2025-06-20,2026-01-10,Đã thay thế,P. Thiết Kế,"Chuẩn hóa quy trình thiết kế 2D/3D phân tách rõ 2 giai đoạn: Phương án sơ phác và Hồ sơ triển khai thi công chi tiết.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Lưu trữ đối soát hồ sơ dự án 2025
 QT-TK-01,v1.0,2024-03-15,2025-06-20,Đã thay thế,Giám Đốc Sáng Lập,"Ban hành lần đầu quy trình thiết kế cơ sở nội bộ cho H-Design.",https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing,Phiên bản sơ khai ban đầu
 QC-BV-02,v2.0,2026-09-25,Đang áp dụng,Đang hiệu lực,P. Kỹ Thuật,"Chuẩn hóa hệ thống Family Revit file mẫu in CTB theo tiêu chuẩn TCVN 2026 và tích hợp mã QR truy xuất bản vẽ hiện trường.",https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing,Áp dụng cho toàn bộ KTS và Họa viên
@@ -2640,7 +2834,7 @@ QC-BV-02,v1.0,2025-01-15,2026-03-10,Đã thay thế,P. Thiết Kế,"Ban hành q
 HD-SX-01,v2.5,2026-10-05,Đang áp dụng,Đang hiệu lực,Quản Đốc Phân Xưởng,"Bổ sung quy định kiểm tra độ bám keo PUR chịu nước và checklist kiểm tra độ mòn dao cắt CNC sau 80 giờ chạy liên tục.",https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,Nghiêm cấm bỏ qua checklist dao cắt
 HD-SX-01,v2.0,2026-04-12,2026-10-05,Đã thay thế,Quản Đốc Xưởng,"Bổ sung chỉ dẫn an toàn vận hành máy dán cạnh tự động 8 chức năng mới nhập khẩu và quy cách cắt phôi gỗ melamine.",https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,Thay thế khi xưởng đầu tư máy mới
 HD-SX-01,v1.0,2025-08-01,2026-04-12,Đã thay thế,Bộ phận Sản Xuất,"Ban hành quy trình thao tác máy CNC nesting ban đầu của xưởng gỗ H-Design.",https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing,Bản đầu tiên
-QC-AT-01,v3.0,2026-07-20,Đang áp dụng,Đang hiệu lực,Ban Giám Đốc & P. Sản Xuất,"Cập nhật tiêu chuẩn PCCC mới theo Nghị định 50/2024/NĐ-CP và hướng dẫn vận hành hệ thống hút bụi trung tâm phân xưởng.",https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,Bắt buộc 100% công nhân xưởng học định kỳ
+QC-AT-01,v3.0,2026-07-20,Đang áp dụng,Đang hiệu lực,Ban Quản Lý & P. Sản Xuất,"Cập nhật tiêu chuẩn PCCC mới theo Nghị định 50/2024/NĐ-CP và hướng dẫn vận hành hệ thống hút bụi trung tâm phân xưởng.",https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,Bắt buộc 100% công nhân xưởng học định kỳ
 QC-AT-01,v2.0,2025-11-15,2026-07-20,Đã thay thế,P. Sản Xuất,"Quy chuẩn trang bị đồ bảo hộ cá nhân (kính, nút tai, khẩu trang hoạt tính) và quy định khu lưu trữ sơn PU/hóa chất chống cháy.",https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,Đã nâng cấp lên v3.0
 QC-AT-01,v1.0,2024-09-01,2025-11-15,Đã thay thế,Ban Quản Lý,"Quy định an toàn lao động và vệ sinh công nghiệp sơ khai khi mới thành lập xưởng.",https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing,Bản lưu trữ lịch sử`;
 
@@ -2662,10 +2856,11 @@ QC-AT-01,v1.0,2024-09-01,2025-11-15,Đã thay thế,Ban Quản Lý,"Quy định 
 function downloadUsersSampleCsv() {
   const csvContent = 
 `Tên đăng nhập (ID),Mật khẩu (Pass / PIN),Họ và tên hiển thị,Phòng ban chính,Vai trò (Role),Quyền xem bộ phận (Allowed),Ghi chú
-admin,1612,Ban Giám Đốc,Ban Giám Đốc,Admin,*,Toàn quyền quản trị & xem tất cả 5 bộ phận
-kythuat,1612,Kỹ Sư Hoàng (Kỹ Thuật),Bộ phận Kỹ Thuật,User,"Bộ phận Kỹ Thuật, Bộ phận Sản Xuất",Xem hồ sơ Kỹ Thuật & Sản Xuất
-sanxuat,1612,Quản Đốc Nam (Sản Xuất),Bộ phận Sản Xuất,User,"Bộ phận Sản Xuất, Bộ phận Kỹ Thuật",Xem hồ sơ Sản Xuất & Kỹ Thuật
-kinhdoanh,1612,Sale Mai (Kinh Doanh),Bộ phận Kinh Doanh,User,"Bộ phận Kinh Doanh, Bộ phận Kỹ Thuật",Xem hồ sơ Kinh Doanh & Kỹ Thuật
+admin,1612,Quản Trị Viên (Admin),Ban Quản Lý,Admin,*,Toàn quyền Thêm/Sửa/Xóa & Duyệt phát hành tất cả 5 bộ phận
+bql,1612,Ban Quản Lý,Ban Quản Lý,Ban Quản Lý,*,Chỉ xem toàn bộ 5 bộ phận (Không thêm sửa xóa duyệt)
+kythuat,1612,Kỹ Sư Hoàng (Kỹ Thuật),Bộ phận Kỹ Thuật,User,Bộ phận Kỹ Thuật,Chỉ xem hồ sơ Kỹ Thuật
+sanxuat,1612,Quản Đốc Nam (Sản Xuất),Bộ phận Sản Xuất,User,Bộ phận Sản Xuất,Chỉ xem hồ sơ Sản Xuất
+kinhdoanh,1612,Sale Mai (Kinh Doanh),Bộ phận Kinh Doanh,User,Bộ phận Kinh Doanh,Chỉ xem hồ sơ Kinh Doanh
 hcns,1612,HR Lan (Hành Chính - NS),Hành Chính - Nhân Sự,User,Hành Chính - Nhân Sự,Chỉ xem phòng Hành Chính - Nhân Sự`;
 
   const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2803,10 +2998,19 @@ function getLinksFromContainer(containerEl) {
 
 function openAddDocModal() {
   if (!DOM.modalAddDoc) return;
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền thêm tài liệu mới!', 'warning');
+    return;
+  }
 
   // Set default date to today
   if (DOM.addDocDate && !DOM.addDocDate.value) {
     DOM.addDocDate.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Reset status to 'Chính thức'
+  if (DOM.addDocStatus) {
+    DOM.addDocStatus.value = 'Chính thức';
   }
 
   // Suggest code if empty
@@ -2884,6 +3088,7 @@ function suggestNextDocCode(force = true) {
   if (dept.includes('Thuật')) deptPrefix = 'KT';
   else if (dept.includes('Công')) deptPrefix = 'TC';
   else if (dept.includes('Xuất')) deptPrefix = 'SX';
+  else if (dept.includes('Quản Lý')) deptPrefix = 'QL';
   else if (dept.includes('Giám Đốc')) deptPrefix = 'GD';
 
   const prefix = `${catPrefix}-${deptPrefix}-`;
@@ -2912,6 +3117,7 @@ async function handleAddDocSubmit(e) {
   const title = (DOM.addDocTitle ? DOM.addDocTitle.value : '').trim();
   const department = DOM.addDocDept ? DOM.addDocDept.value : 'Bộ phận Kỹ Thuật';
   const category = DOM.addDocCat ? DOM.addDocCat.value : 'Quy trình';
+  const status = (DOM.addDocStatus ? DOM.addDocStatus.value : 'Chính thức') || 'Chính thức';
   const version = (DOM.addDocVersion ? DOM.addDocVersion.value : '').trim() || 'v1.0';
   const updatedAt = (DOM.addDocDate ? DOM.addDocDate.value : '') || new Date().toISOString().split('T')[0];
   const description = (DOM.addDocDesc ? DOM.addDocDesc.value : '').trim();
@@ -2949,6 +3155,7 @@ async function handleAddDocSubmit(e) {
     title,
     department,
     category,
+    status,
     version,
     updatedAt,
     driveUrl,
@@ -3006,12 +3213,62 @@ async function handleAddDocSubmit(e) {
 
 /**
  * ============================================================
+ * APPROVE DRAFT DOCUMENT CONTROLLER (ADMIN ONLY)
+ * ============================================================
+ */
+async function handleApproveDocument(code) {
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền phê duyệt phát hành tài liệu!', 'warning');
+    return;
+  }
+
+  const doc = AppState.allDocuments.find(d => (d.code || '').trim().toUpperCase() === (code || '').trim().toUpperCase());
+  if (!doc) {
+    showToast(`Không tìm thấy tài liệu có mã [${code}]!`, 'error');
+    return;
+  }
+
+  const isConfirmed = window.confirm(`Bạn có chắc chắn muốn phê duyệt phát hành chính thức tài liệu [${doc.code} - ${doc.title}]?\n\nTài liệu sẽ chuyển từ trạng thái "Dự thảo" sang "Chính thức" và có hiệu lực áp dụng trong toàn hệ thống.`);
+  if (!isConfirmed) return;
+
+  const adminUser = AppState.currentUser ? AppState.currentUser.fullName : 'Quản Trị Viên (Admin)';
+
+  try {
+    showToast(`Đang phê duyệt phát hành [${doc.code}]...`, 'info');
+
+    const result = await DataStore.approveDocument(doc.code, adminUser);
+    if (!result || !result.success) {
+      showToast(result && result.message ? result.message : 'Không thể cập nhật trạng thái tài liệu.', 'error');
+      return;
+    }
+
+    AppState.allDocuments = DataStore.getDocuments();
+
+    // If preview modal is open, re-render it
+    if (DOM.modalPreview && !DOM.modalPreview.classList.contains('hidden') && AppState.activePreviewDoc && AppState.activePreviewDoc.code === doc.code) {
+      openPreviewModal(result.document);
+    }
+
+    applyFiltersAndRender();
+    showToast(`🎉 Đã duyệt phát hành chính thức quy trình [${doc.code}]!`, 'success');
+  } catch (err) {
+    console.error('Lỗi khi duyệt tài liệu:', err);
+    showToast(`Có lỗi xảy ra khi duyệt: ${err.message}`, 'error');
+  }
+}
+
+/**
+ * ============================================================
  * EDIT DOCUMENT / UPDATE GOOGLE DRIVE LINK CONTROLLER
  * ============================================================
  */
 
 function openEditDocModal(docId) {
   if (!DOM.modalEditDoc) return;
+  if (!AuthStore.isAdmin(AppState.currentUser)) {
+    showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền chỉnh sửa tài liệu!', 'warning');
+    return;
+  }
 
   const doc = AppState.allDocuments.find(d => d.id === docId || d.code === docId);
   if (!doc) {
@@ -3025,6 +3282,7 @@ function openEditDocModal(docId) {
   if (DOM.editDocTitle) DOM.editDocTitle.value = doc.title || '';
   if (DOM.editDocDept) DOM.editDocDept.value = doc.department || 'Bộ phận Kỹ Thuật';
   if (DOM.editDocCat) DOM.editDocCat.value = doc.category || 'Quy trình';
+  if (DOM.editDocStatus) DOM.editDocStatus.value = doc.status || 'Chính thức';
   if (DOM.editDocVersion) DOM.editDocVersion.value = doc.version || 'v1.0';
   if (DOM.editDocDate) DOM.editDocDate.value = new Date().toISOString().split('T')[0];
   if (DOM.editDocUrl) DOM.editDocUrl.value = doc.driveUrl || '';
@@ -3082,6 +3340,7 @@ async function handleEditDocSubmit(e) {
   const title = (DOM.editDocTitle ? DOM.editDocTitle.value : '').trim();
   const department = DOM.editDocDept ? DOM.editDocDept.value : 'Bộ phận Kỹ Thuật';
   const category = DOM.editDocCat ? DOM.editDocCat.value : 'Quy trình';
+  const status = (DOM.editDocStatus ? DOM.editDocStatus.value : 'Chính thức') || 'Chính thức';
   const version = (DOM.editDocVersion ? DOM.editDocVersion.value : '').trim() || 'v1.0';
   const updatedAt = (DOM.editDocDate ? DOM.editDocDate.value : '') || new Date().toISOString().split('T')[0];
   const changeReason = (DOM.editDocReason ? DOM.editDocReason.value : '').trim();
@@ -3111,6 +3370,7 @@ async function handleEditDocSubmit(e) {
     title,
     department,
     category,
+    status,
     version,
     updatedAt,
     driveUrl,
@@ -3171,7 +3431,7 @@ let pendingDeleteDoc = null;
 function openDeleteConfirmModal(doc) {
   if (!doc) return;
   if (!AuthStore.isAdmin(AppState.currentUser)) {
-    showToast('Chỉ tài khoản Quản trị (Ban Giám Đốc) mới có quyền xóa tài liệu!', 'warning');
+    showToast('Chỉ tài khoản Quản trị (Admin) mới có quyền xóa tài liệu!', 'warning');
     return;
   }
 

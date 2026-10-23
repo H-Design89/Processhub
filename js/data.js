@@ -35,6 +35,7 @@ const DEFAULT_MOCK_DOCUMENTS = [
     title: "HƯỚNG DẪN THAO TÁC GẮN TEM INOX LÊN TỦ ĐÔNG",
     department: "Bộ phận Sản Xuất",
     category: "Hướng dẫn",
+    status: "Chính thức",
     version: "v1.0",
     updatedAt: "2026-10-21",
     driveUrl: "https://drive.google.com/",
@@ -47,6 +48,7 @@ const DEFAULT_MOCK_DOCUMENTS = [
     title: "Quy trình thiết kế phương án kiến trúc & nội thất",
     department: "Bộ phận Kỹ Thuật",
     category: "Quy trình",
+    status: "Chính thức",
     version: "v3.2",
     updatedAt: "2026-10-10",
     driveUrl: "Tài liệu Quy trình chính (PDF): https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing\nBiểu mẫu khảo sát hiện trạng BM-01 (Excel): https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing\nChecklist kiểm tra hồ sơ thiết kế: https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing",
@@ -151,15 +153,16 @@ const DEFAULT_MOCK_DOCUMENTS = [
   },
   {
     id: "doc-10",
-    code: "CS-GD-01",
+    code: "CS-QL-01",
     title: "Chính sách bảo mật thông tin nội bộ, quản lý dữ liệu & phân quyền tài liệu",
-    department: "Ban Giám Đốc",
+    department: "Ban Quản Lý",
     category: "Chính sách",
+    status: "Chính thức",
     version: "v1.2",
     updatedAt: "2026-06-30",
     driveUrl: "https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing",
     description: "Quy định phân quyền truy cập tài liệu giữa các bộ phận, bảo mật file thiết kế 3D/CAD của khách hàng và cam kết bảo mật NDA của nhân sự.",
-    tags: ["bảo mật", "chính sách", "nda", "tài sản trí tuệ", "quy định nội bộ", "giám đốc"]
+    tags: ["bảo mật", "chính sách", "nda", "tài sản trí tuệ", "quy định nội bộ", "ban quản lý"]
   },
   {
     id: "doc-11",
@@ -167,6 +170,7 @@ const DEFAULT_MOCK_DOCUMENTS = [
     title: "Checklist kiểm tra hồ sơ thiết kế chi tiết trước khi chuyển giao xưởng sản xuất",
     department: "Bộ phận Kỹ Thuật",
     category: "Biểu mẫu",
+    status: "Chính thức",
     version: "v2.8",
     updatedAt: "2026-10-14",
     driveUrl: "https://drive.google.com/file/d/1K_Sample_ChecklistDesignQA_DriveFile/view?usp=sharing",
@@ -179,11 +183,38 @@ const DEFAULT_MOCK_DOCUMENTS = [
     title: "Biểu mẫu khảo sát nhu cầu khách hàng & bảng phân tích hiện trạng dự án",
     department: "Bộ phận Kinh Doanh",
     category: "Biểu mẫu",
+    status: "Chính thức",
     version: "v1.4",
     updatedAt: "2026-09-02",
     driveUrl: "https://drive.google.com/file/d/1L_Sample_ITGuide_DriveFile/view?usp=sharing",
     description: "Phiếu thu thập thông tin khách hàng: phong cách mong muốn, ngân sách đầu tư, tiến độ yêu cầu và đặc điểm mặt bằng cần cải tạo.",
     tags: ["kinh doanh", "khảo sát", "brief", "khách hàng", "tư vấn"]
+  },
+  {
+    id: "doc-draft-ai",
+    code: "QT-TK-02",
+    title: "Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế",
+    department: "Bộ phận Kỹ Thuật",
+    category: "Quy trình",
+    status: "Dự thảo",
+    version: "v0.9",
+    updatedAt: "2026-10-22",
+    driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
+    description: "Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ trước khi chuyển sang giai đoạn dựng hình chi tiết.",
+    tags: ["ai", "thiet ke", "du thao", "concept", "thử nghiệm"]
+  },
+  {
+    id: "doc-ref-wood",
+    code: "TK-VL-01",
+    title: "Cẩm nang tra cứu thông số kỹ thuật gỗ công nghiệp & phụ kiện nội thất 2026",
+    department: "Bộ phận Sản Xuất",
+    category: "Hướng dẫn",
+    status: "Tham khảo",
+    version: "v1.0",
+    updatedAt: "2026-10-15",
+    driveUrl: "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing",
+    description: "Tài liệu cẩm nang kỹ thuật tổng hợp quy cách ván MDF, HDF, MFC An Cường và catalog phụ kiện Hafele dùng làm căn cứ tham khảo sản xuất.",
+    tags: ["cam nang", "go", "an cuong", "tham khao", "vat tu"]
   }
 ];
 
@@ -208,7 +239,7 @@ const DEFAULT_VERSION_HISTORY = [
     releaseDate: "2026-10-10",
     deprecatedDate: "Đang áp dụng",
     status: "active",
-    author: "Ban Giám Đốc",
+    author: "Ban Quản Lý",
     reason: "Cập nhật quy trình duyệt phối cảnh 3D bằng kính VR và chuẩn hóa các mốc nghiệm thu concept với Chủ đầu tư.",
     driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
     notes: "Bắt buộc áp dụng cho toàn bộ dự án từ Q4/2026"
@@ -230,7 +261,7 @@ const DEFAULT_VERSION_HISTORY = [
     releaseDate: "2026-01-10",
     deprecatedDate: "2026-05-15",
     status: "archived",
-    author: "Ban Giám Đốc",
+    author: "Ban Quản Lý",
     reason: "Nâng cấp toàn diện quy trình thiết kế tích hợp mô hình BIM/Revit đồng bộ hóa dữ liệu trực tiếp với xưởng sản xuất.",
     driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
     notes: "Chuyển đổi công nghệ vẽ CAD sang Revit"
@@ -332,7 +363,7 @@ const DEFAULT_VERSION_HISTORY = [
     releaseDate: "2026-07-20",
     deprecatedDate: "Đang áp dụng",
     status: "active",
-    author: "Ban Giám Đốc & P. Sản Xuất",
+    author: "Ban Quản Lý & P. Sản Xuất",
     reason: "Cập nhật tiêu chuẩn PCCC mới theo Nghị định 50/2024/NĐ-CP và hướng dẫn vận hành hệ thống hút bụi trung tâm phân xưởng.",
     driveUrl: "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing",
     notes: "Bắt buộc 100% công nhân xưởng học định kỳ"
@@ -363,7 +394,7 @@ const DEFAULT_VERSION_HISTORY = [
 
 // Department Color Mapping & Metadata (5 Core Departments)
 const DEPARTMENT_COLORS = {
-  "Ban Giám Đốc": { border: "#8B5CF6", text: "#7C3AED", icon: "shield-check" },
+  "Ban Quản Lý": { border: "#8B5CF6", text: "#7C3AED", icon: "shield-check" },
   "Bộ phận Kỹ Thuật": { border: "#06B6D4", text: "#0891B2", icon: "pen-tool" },
   "Bộ phận Sản Xuất": { border: "#10B981", text: "#059669", icon: "hammer" },
   "Bộ phận Kinh Doanh": { border: "#3B82F6", text: "#2563EB", icon: "briefcase" },
@@ -373,47 +404,57 @@ const DEPARTMENT_COLORS = {
 // Default Accounts & Department Access Permissions
 const DEFAULT_ACCOUNTS = [
   {
-    id: "user-1",
+    id: "user-admin",
     username: "admin",
     password: "1612",
-    fullName: "Ban Giám Đốc",
-    department: "Ban Giám Đốc",
+    fullName: "Quản Trị Viên (Admin)",
+    department: "Ban Quản Lý",
     role: "Admin",
-    allowedDepartments: ["*"], // Xem tất cả
+    allowedDepartments: ["*"], // Toàn quyền quản trị & duyệt phát hành
     avatarIcon: "shield-check"
   },
   {
-    id: "user-2",
+    id: "user-bql",
+    username: "bql",
+    password: "1612",
+    fullName: "Ban Quản Lý",
+    department: "Ban Quản Lý",
+    role: "Ban Quản Lý",
+    allowedDepartments: ["*"], // Xem tất cả 5 bộ phận (Chỉ xem - Read-only)
+    avatarIcon: "shield"
+  },
+  {
+    id: "user-kythuat",
     username: "kythuat",
     password: "1612",
     fullName: "Kỹ Sư Hoàng (Kỹ Thuật)",
     department: "Bộ phận Kỹ Thuật",
     role: "User",
-    allowedDepartments: ["Bộ phận Kỹ Thuật", "Bộ phận Sản Xuất"],
+    allowedDepartments: ["Bộ phận Kỹ Thuật"],
     avatarIcon: "pen-tool"
   },
   {
-    id: "user-3",
+    id: "user-sanxuat",
     username: "sanxuat",
     password: "1612",
     fullName: "Quản Đốc Nam (Sản Xuất)",
     department: "Bộ phận Sản Xuất",
     role: "User",
-    allowedDepartments: ["Bộ phận Sản Xuất", "Bộ phận Kỹ Thuật"],
+    allowedDepartments: ["Bộ phận Sản Xuất"],
     avatarIcon: "hammer"
   },
   {
-    id: "user-4",
+    id: "user-kinhdoanh",
     username: "kinhdoanh",
     password: "1612",
     fullName: "Sale Mai (Kinh Doanh)",
     department: "Bộ phận Kinh Doanh",
     role: "User",
-    allowedDepartments: ["Bộ phận Kinh Doanh", "Bộ phận Kỹ Thuật"],
+    allowedDepartments: ["Bộ phận Kinh Doanh"],
     avatarIcon: "briefcase"
   },
   {
-    id: "user-5",
+    id: "user-hcns",
     username: "hcns",
     password: "1612",
     fullName: "HR Lan (Hành Chính - NS)",
@@ -515,19 +556,40 @@ const AuthStore = {
 
   canAccessDepartment(user, deptName) {
     if (!user) return false;
-    if (user.allowedDepartments.includes('*')) return true;
-    return user.allowedDepartments.includes(deptName);
+    if (user.allowedDepartments && user.allowedDepartments.includes('*')) return true;
+    return user.allowedDepartments ? user.allowedDepartments.includes(deptName) : false;
   },
 
   isAdmin(user) {
     if (!user) return false;
-    return user.role === 'Admin' || user.username === 'admin' || (Array.isArray(user.allowedDepartments) && user.allowedDepartments.includes('*'));
+    return user.role === 'Admin' || user.username === 'admin';
+  },
+
+  isManagement(user) {
+    if (!user) return false;
+    return user.role === 'Ban Quản Lý' || user.username === 'bql';
   },
 
   filterAllowedDocuments(docs, user) {
-    if (!user) return [];
-    if (user.allowedDepartments.includes('*')) return docs;
-    return docs.filter(doc => user.allowedDepartments.includes(doc.department));
+    if (!user || !Array.isArray(docs)) return [];
+    const isUserAdmin = this.isAdmin(user);
+
+    // 1. Phân quyền xem theo Trạng thái (Status):
+    // Nhân viên thông thường & Ban Quản Lý chỉ xem tài liệu "Chính thức" và "Tham khảo".
+    // Tuyệt đối KHÔNG hiển thị tài liệu "Dự thảo" (Chờ duyệt) cho người không phải Admin, tránh nhầm lẫn áp dụng!
+    let statusFiltered = docs;
+    if (!isUserAdmin) {
+      statusFiltered = docs.filter(doc => {
+        const st = (doc.status || 'Chính thức').trim();
+        return st !== 'Dự thảo' && st !== 'Chờ duyệt';
+      });
+    }
+
+    // 2. Phân quyền xem theo Bộ phận (Department):
+    if (user.allowedDepartments && user.allowedDepartments.includes('*')) {
+      return statusFiltered;
+    }
+    return statusFiltered.filter(doc => user.allowedDepartments && user.allowedDepartments.includes(doc.department));
   }
 };
 
@@ -823,6 +885,7 @@ function mapHeaderIndex(headers) {
     title: -1,
     department: -1,
     category: -1,
+    status: -1,
     version: -1,
     updatedAt: -1,
     driveUrl: -1,
@@ -845,6 +908,8 @@ function mapHeaderIndex(headers) {
       if (map.department === -1) map.department = idx;
     } else if (norm.includes('loai') || norm.includes('phanloai') || norm.includes('theloai') || norm.includes('category') || norm.includes('type')) {
       if (map.category === -1) map.category = idx;
+    } else if (norm.includes('trangthai') || norm.includes('status') || norm.includes('tinhtrang')) {
+      if (map.status === -1) map.status = idx;
     } else if (norm.includes('phienban') || norm.includes('version') || norm.includes('ver')) {
       if (map.version === -1) map.version = idx;
     } else if (norm.includes('ngay') || norm.includes('date') || norm.includes('capnhat') || norm.includes('banhanh')) {
@@ -1011,6 +1076,7 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
     const code = (headerMap.code >= 0 && row[headerMap.code]) ? row[headerMap.code].trim() : `DOC-${i}`;
     const department = (headerMap.department >= 0 && row[headerMap.department]) ? row[headerMap.department].trim() : 'Chung';
     const category = (headerMap.category >= 0 && row[headerMap.category]) ? row[headerMap.category].trim() : 'Quy trình';
+    const status = (headerMap.status >= 0 && row[headerMap.status]) ? row[headerMap.status].trim() : 'Chính thức';
     const version = (headerMap.version >= 0 && row[headerMap.version]) ? row[headerMap.version].trim() : 'v1.0';
     const updatedAt = (headerMap.updatedAt >= 0 && row[headerMap.updatedAt]) ? row[headerMap.updatedAt].trim() : new Date().toISOString().split('T')[0];
     const driveUrl = (headerMap.driveUrl >= 0 && row[headerMap.driveUrl]) ? row[headerMap.driveUrl].trim() : '';
@@ -1023,8 +1089,9 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
       id: `sheet-${i}-${code.replace(/[^a-zA-Z0-9]/g, '')}`,
       code,
       title,
-      department,
+      department: department === 'Ban Giám Đốc' ? 'Ban Quản Lý' : department,
       category,
+      status: status || 'Chính thức',
       version,
       updatedAt,
       driveUrl,
@@ -1145,26 +1212,35 @@ const DataStore = {
       if (cached) {
         let parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // If cached documents still contain outdated department names, fallback to new mock defaults
-          const hasOutdatedDept = parsed.some(d => 
-            d.department === 'Thi Công & Kỹ Thuật' || 
-            d.department === 'Phòng Thiết Kế' || 
-            d.department === 'Phòng Nhân Sự' ||
-            d.department === 'Tài Chính - Kế Toán'
-          );
-          if (!hasOutdatedDept) {
-            // Tự động chuyển đổi các tài liệu loại "Quy chuẩn" sang "Tiêu chuẩn"
-            parsed.forEach(d => {
-              if (d.category === 'Quy chuẩn') {
-                d.category = 'Tiêu chuẩn';
-              }
+          // Tự động chuyển đổi các tài liệu cũ sang danh xưng Ban Quản Lý và gán trạng thái
+          parsed.forEach(d => {
+            if (d.department === 'Ban Giám Đốc') d.department = 'Ban Quản Lý';
+            if (d.department === 'Phòng Thiết Kế') d.department = 'Bộ phận Kỹ Thuật';
+            if (d.category === 'Quy chuẩn') d.category = 'Tiêu chuẩn';
+            if (!d.status) d.status = 'Chính thức';
+          });
+
+          // Loại bỏ hoàn toàn tài liệu mẫu BV-TK-01 nếu còn lưu trong cache
+          parsed = parsed.filter(d => (d.code || '').trim().toUpperCase() !== 'BV-TK-01');
+
+          // Đảm bảo có mẫu Dự thảo & Tham khảo để người dùng kiểm thử
+          if (!parsed.some(d => d.code === 'QT-TK-02')) {
+            parsed.push({
+              id: "doc-draft-ai",
+              code: "QT-TK-02",
+              title: "Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế",
+              department: "Bộ phận Kỹ Thuật",
+              category: "Quy trình",
+              status: "Dự thảo",
+              version: "v0.9",
+              updatedAt: "2026-10-22",
+              driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
+              description: "Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ trước khi chuyển sang giai đoạn dựng hình chi tiết.",
+              tags: ["ai", "thiet ke", "du thao", "concept", "thử nghiệm"]
             });
-
-            // Loại bỏ hoàn toàn tài liệu mẫu BV-TK-01 nếu còn lưu trong cache
-            parsed = parsed.filter(d => (d.code || '').trim().toUpperCase() !== 'BV-TK-01');
-
-            return parsed;
           }
+
+          return parsed;
         }
       }
     } catch (e) {
@@ -1443,6 +1519,56 @@ const DataStore = {
     this.setDocuments(rawDocs);
 
     return rawDocs;
+  },
+
+  /**
+   * Phê duyệt và phát hành chính thức tài liệu dự thảo
+   */
+  async approveDocument(code, approvedBy = 'Ban Quản Lý', newVersion = null, effectiveDate = null) {
+    const rawDocs = this.getDocuments();
+    const cleanCode = (code || '').trim().toUpperCase();
+    const index = rawDocs.findIndex(d => (d.code || '').trim().toUpperCase() === cleanCode);
+    if (index === -1) return { success: false, message: 'Không tìm thấy tài liệu cần duyệt.' };
+
+    const doc = rawDocs[index];
+    const todayStr = effectiveDate || new Date().toISOString().slice(0, 10);
+    doc.status = 'Chính thức';
+    doc.updatedAt = todayStr;
+    if (newVersion) doc.version = newVersion;
+    this.setDocuments(rawDocs);
+
+    // Lưu vào lịch sử phiên bản
+    const historyItem = {
+      code: doc.code,
+      version: doc.version || 'v1.0',
+      releaseDate: todayStr,
+      deprecatedDate: 'Đang áp dụng',
+      status: 'active',
+      author: approvedBy || 'Ban Quản Lý',
+      reason: 'Phê duyệt & ban hành chính thức có hiệu lực áp dụng.',
+      driveUrl: doc.driveUrl || '',
+      notes: 'Đã duyệt bởi Quản Trị Viên (Admin)'
+    };
+    const allHistory = [historyItem, ...this.getVersionHistory()];
+    this.setVersionHistory(allHistory);
+
+    // Đồng bộ lên Google Apps Script nếu có kết nối
+    const config = this.getSheetConfig();
+    if (config && config.sheetId && config.sheetId.includes('script.google.com/macros/s/')) {
+      try {
+        fetch(config.sheetId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'approveDocument',
+            document: doc,
+            approvedBy: approvedBy || 'Ban Quản Lý'
+          })
+        }).catch(err => console.warn('Lỗi gọi approveDocument lên Apps Script:', err));
+      } catch (e) {}
+    }
+
+    return { success: true, document: doc };
   },
 
   /**

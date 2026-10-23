@@ -61,15 +61,15 @@
         </button>
 
         <!-- System Settings Trigger (Gear Icon - Admin Only) -->
-        <button id="btn-open-settings" class="nav-action-btn primary hidden" title="Cài đặt hệ thống (Chỉ Ban Giám Đốc / Admin)">
+        <button id="btn-open-settings" class="nav-action-btn primary hidden" title="Cài đặt hệ thống (Chỉ Quản Trị Viên / Admin)">
           <i data-lucide="settings"></i>
           <span class="btn-text">Cài đặt</span>
         </button>
 
         <!-- User Account / Role Profile Button -->
         <button id="btn-open-login" class="nav-action-btn user-btn" title="Thông tin tài khoản & Phân quyền">
-          <i data-lucide="shield-check" id="nav-user-icon"></i>
-          <span class="btn-text" id="nav-user-name">Ban Giám Đốc</span>
+          <i data-lucide="shield" id="nav-user-icon"></i>
+          <span class="btn-text" id="nav-user-name">Ban Quản Lý</span>
         </button>
 
         <!-- Theme Toggle -->
@@ -176,6 +176,17 @@
               </select>
             </div>
 
+            <!-- Status Dropdown Filter -->
+            <div class="select-wrapper status-wrapper" id="status-filter-wrapper">
+              <label for="filter-status"><i data-lucide="check-circle-2"></i> Trạng thái:</label>
+              <select id="filter-status" class="custom-select compact">
+                <option value="all">Tất cả trạng thái</option>
+                <option value="Chính thức">Chính thức (Áp dụng)</option>
+                <option value="Tham khảo">Tài liệu tham khảo</option>
+                <option value="Dự thảo" id="opt-filter-draft" class="hidden">⚠️ Chờ duyệt (Bản thảo)</option>
+              </select>
+            </div>
+
             <!-- Group By Selector (Flat vs By Department) -->
             <div class="select-wrapper group-wrapper" id="group-wrapper">
               <label for="select-group-by"><i data-lucide="folder-tree"></i> Gom nhóm:</label>
@@ -208,8 +219,14 @@
               <span>Đặt lại</span>
             </button>
 
-            <!-- Add New Process Button (Quick Action) -->
-            <button id="btn-toolbar-add-doc" class="filter-pill-btn primary btn-toolbar-add-doc" title="Thêm quy trình / tài liệu mới">
+            <!-- Admin Quick Pending Drafts Badge Filter -->
+            <button id="btn-pending-drafts" class="filter-pill-btn warning-pill hidden" title="Xem các tài liệu dự thảo đang chờ duyệt">
+              <i data-lucide="clock"></i>
+              <span>Chờ duyệt (<span id="pending-drafts-count">0</span>)</span>
+            </button>
+
+            <!-- Add New Process Button (Admin Only Action) -->
+            <button id="btn-toolbar-add-doc" class="filter-pill-btn primary btn-toolbar-add-doc hidden" title="Thêm quy trình / tài liệu mới (Chỉ Admin)">
               <i data-lucide="plus"></i>
               <span>Thêm mới</span>
             </button>
@@ -395,16 +412,16 @@
             </div>
           </div>
 
-          <!-- Row 2: Department and Category -->
-          <div class="form-row-grid two-cols">
+          <!-- Row 2: Department, Category, and Status -->
+          <div class="form-row-grid three-cols">
             <div class="form-group">
               <label for="add-doc-dept">Phòng ban áp dụng <span class="required">*</span></label>
               <select id="add-doc-dept" class="form-input custom-select" required>
+                <option value="Ban Quản Lý">Ban Quản Lý</option>
                 <option value="Bộ phận Kỹ Thuật">Bộ phận Kỹ Thuật</option>
                 <option value="Bộ phận Sản Xuất">Bộ phận Sản Xuất</option>
                 <option value="Bộ phận Kinh Doanh">Bộ phận Kinh Doanh</option>
                 <option value="Hành Chính - Nhân Sự">Hành Chính - Nhân Sự</option>
-                <option value="Ban Giám Đốc">Ban Giám Đốc</option>
               </select>
             </div>
             <div class="form-group">
@@ -416,6 +433,14 @@
                 <option value="Biểu mẫu">Biểu mẫu (BM)</option>
                 <option value="Bản vẽ">Bản vẽ (BV)</option>
                 <option value="Chính sách">Chính sách & Quy chế (CS)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="add-doc-status">Trạng thái phát hành <span class="required">*</span></label>
+              <select id="add-doc-status" class="form-input custom-select" required>
+                <option value="Chính thức" selected>Chính thức (Đang áp dụng)</option>
+                <option value="Dự thảo">Dự thảo (Chưa ban hành / Chờ duyệt)</option>
+                <option value="Tham khảo">Tham khảo (Tài liệu đọc thêm)</option>
               </select>
             </div>
           </div>
@@ -552,16 +577,16 @@
               </div>
             </div>
 
-            <!-- Row 2: Department and Category -->
-            <div class="form-row-grid two-cols">
+            <!-- Row 2: Department, Category, and Status -->
+            <div class="form-row-grid three-cols">
               <div class="form-group">
                 <label for="edit-doc-dept">Phòng ban áp dụng <span class="required">*</span></label>
                 <select id="edit-doc-dept" class="form-input custom-select" required>
+                  <option value="Ban Quản Lý">Ban Quản Lý</option>
                   <option value="Bộ phận Kỹ Thuật">Bộ phận Kỹ Thuật</option>
                   <option value="Bộ phận Sản Xuất">Bộ phận Sản Xuất</option>
                   <option value="Bộ phận Kinh Doanh">Bộ phận Kinh Doanh</option>
                   <option value="Hành Chính - Nhân Sự">Hành Chính - Nhân Sự</option>
-                  <option value="Ban Giám Đốc">Ban Giám Đốc</option>
                 </select>
               </div>
               <div class="form-group">
@@ -573,6 +598,14 @@
                   <option value="Biểu mẫu">Biểu mẫu (BM)</option>
                   <option value="Bản vẽ">Bản vẽ (BV)</option>
                   <option value="Chính sách">Chính sách & Quy chế (CS)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="edit-doc-status">Trạng thái phát hành <span class="required">*</span></label>
+                <select id="edit-doc-status" class="form-input custom-select" required>
+                  <option value="Chính thức">Chính thức (Đang áp dụng)</option>
+                  <option value="Dự thảo">Dự thảo (Chưa ban hành / Chờ duyệt)</option>
+                  <option value="Tham khảo">Tham khảo (Tài liệu đọc thêm)</option>
                 </select>
               </div>
             </div>
@@ -678,7 +711,7 @@
             </div>
             <div>
               <h3>Xác Nhận Xóa Tài Liệu</h3>
-              <p>Chỉ tài khoản Quản trị (Ban Giám Đốc) có quyền thực hiện</p>
+              <p>Chỉ tài khoản Quản trị (Admin) có quyền thực hiện</p>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-delete-modal" title="Đóng">
@@ -732,7 +765,7 @@
             </div>
             <div>
               <h3>Thông Tin Kết Nối Hệ Thống</h3>
-              <p>Xem 2 đường dẫn hoạt động chính thức (Chỉ hiển thị Ban Giám Đốc / Admin)</p>
+              <p>Xem 2 đường dẫn hoạt động chính thức (Chỉ hiển thị Quản Trị Viên / Admin)</p>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-settings" title="Đóng">
@@ -880,7 +913,10 @@
         <div class="sheet-drag-handle" aria-hidden="true"></div>
         <div class="modal-header">
           <div class="modal-title">
-            <div id="preview-badge-category" class="cat-badge">Quy trình</div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <div id="preview-badge-category" class="cat-badge">Quy trình</div>
+              <span id="preview-badge-status" class="doc-status-badge status-official">Chính thức</span>
+            </div>
             <div>
               <h3 id="preview-title">Tên quy trình</h3>
               <p id="preview-meta">Mã: QT-01 • Phòng ban: Thiết kế • Cập nhật: 15/10/2026</p>
@@ -903,6 +939,19 @@
           <div class="preview-layout">
             <!-- Left Info Panel -->
             <div class="preview-info-panel">
+              <!-- Warning Banner for Draft / Soạn thảo -->
+              <div id="preview-draft-banner" class="preview-draft-banner hidden">
+                <div class="draft-banner-top">
+                  <i data-lucide="alert-triangle"></i>
+                  <strong>BẢN THẢO CHƯA PHÁT HÀNH CHÍNH THỨC</strong>
+                </div>
+                <p>Quy trình này đang trong giai đoạn soạn thảo thử nghiệm, chưa có giá trị pháp lý bắt buộc áp dụng.</p>
+                <button type="button" id="btn-preview-approve" class="btn-approve-doc hidden" title="Phê duyệt đưa bản thảo này lên chính thức">
+                  <i data-lucide="check-circle-2"></i>
+                  <span>Duyệt Phát Hành Ngay</span>
+                </button>
+              </div>
+
               <!-- Fast Action Buttons Placed at TOP: Supports 1 or Multiple Named Links -->
               <div class="info-block action-block">
                 <div class="preview-links-header">
@@ -1031,7 +1080,7 @@
                 </div>
                 <div class="avh-info-item">
                   <i data-lucide="user-check"></i>
-                  <span>Người duyệt: <strong id="vh-active-author">Ban Giám Đốc</strong></span>
+                  <span>Người duyệt: <strong id="vh-active-author">Ban Quản Lý</strong></span>
                 </div>
               </div>
               <div class="avh-reason-box">
@@ -1123,35 +1172,42 @@
                 <span class="quick-chip-icon">👑</span>
                 <div class="quick-chip-text">
                   <strong>admin</strong>
-                  <small>Ban Giám Đốc (*)</small>
+                  <small>Quản Trị & Duyệt (*)</small>
                 </div>
               </button>
-              <button type="button" class="quick-user-chip" data-username="thietke" data-password="1612">
+              <button type="button" class="quick-user-chip" data-username="bql" data-password="1612">
+                <span class="quick-chip-icon">🛡️</span>
+                <div class="quick-chip-text">
+                  <strong>bql</strong>
+                  <small>Ban Quản Lý (Xem 5 phòng)</small>
+                </div>
+              </button>
+              <button type="button" class="quick-user-chip" data-username="kythuat" data-password="1612">
                 <span class="quick-chip-icon">🏛️</span>
                 <div class="quick-chip-text">
-                  <strong>thietke</strong>
-                  <small>Thiết Kế + Sản Xuất</small>
+                  <strong>kythuat</strong>
+                  <small>Kỹ Thuật (Chỉ xem)</small>
                 </div>
               </button>
               <button type="button" class="quick-user-chip" data-username="sanxuat" data-password="1612">
                 <span class="quick-chip-icon">🏭</span>
                 <div class="quick-chip-text">
                   <strong>sanxuat</strong>
-                  <small>Sản Xuất + Thiết Kế</small>
+                  <small>Sản Xuất (Chỉ xem)</small>
                 </div>
               </button>
               <button type="button" class="quick-user-chip" data-username="kinhdoanh" data-password="1612">
                 <span class="quick-chip-icon">💼</span>
                 <div class="quick-chip-text">
                   <strong>kinhdoanh</strong>
-                  <small>Kinh Doanh + Thiết Kế</small>
+                  <small>Kinh Doanh (Chỉ xem)</small>
                 </div>
               </button>
               <button type="button" class="quick-user-chip" data-username="hcns" data-password="1612">
                 <span class="quick-chip-icon">📑</span>
                 <div class="quick-chip-text">
                   <strong>hcns</strong>
-                  <small>Hành Chính - Nhân Sự</small>
+                  <small>Hành Chính - NS (Chỉ xem)</small>
                 </div>
               </button>
             </div>
@@ -1161,14 +1217,14 @@
           <div class="current-account-card" id="current-account-card" style="display: none;">
             <div class="account-card-left">
               <div class="account-avatar-large">
-                <i data-lucide="shield-check" id="auth-current-avatar"></i>
+                <i data-lucide="shield" id="auth-current-avatar"></i>
               </div>
               <div class="account-card-info">
                 <div class="account-name-badge">
-                  <strong id="auth-current-name">Ban Giám Đốc</strong>
-                  <span class="account-role-tag" id="auth-current-role">Toàn quyền (Admin)</span>
+                  <strong id="auth-current-name">Ban Quản Lý</strong>
+                  <span class="account-role-tag" id="auth-current-role">Chỉ Xem (Read-only)</span>
                 </div>
-                <div class="account-dept-sub" id="auth-current-dept">Bộ phận: Ban Giám Đốc</div>
+                <div class="account-dept-sub" id="auth-current-dept">Bộ phận: Ban Quản Lý</div>
                 <div class="account-allowed-pill" id="auth-current-allowed">
                   <i data-lucide="eye"></i> <span>Xem: Tất cả 5 bộ phận (*)</span>
                 </div>
@@ -1201,7 +1257,7 @@
         <i data-lucide="refresh-cw"></i>
         <span>Đồng bộ</span>
       </button>
-      <button class="mobile-nav-item hidden" id="mobile-nav-settings" title="Cài đặt hệ thống (Chỉ Ban Giám Đốc / Admin)">
+      <button class="mobile-nav-item hidden" id="mobile-nav-settings" title="Cài đặt hệ thống (Chỉ Admin)">
         <i data-lucide="settings"></i>
         <span>Cài đặt</span>
       </button>

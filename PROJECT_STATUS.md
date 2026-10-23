@@ -1,71 +1,58 @@
 # BÁO CÁO TIẾN ĐỘ & BÀN GIAO CÔNG VIỆC (HANDOVER NOTES)
 **Dự án:** ProcessHub - Cổng Tra Cứu Quy Trình & Hướng Dẫn Làm Việc  
 **Đơn vị:** Solution by H-Design  
-**Ngày cập nhật:** 15/10/2026 (17:15)  
-**Trạng thái hiện tại:** ✅ Đã hoàn thiện phiên bản V1.0 - Sẵn sàng kết nối Google Sheets thực tế  
+**Ngày cập nhật:** 23/10/2026  
+**Trạng thái hiện tại:** ✅ Đã hoàn thiện toàn diện Hệ Thống Phân Quyền & Quy Trình Phê Duyệt Tài Liệu  
 
 ---
 
-## 📌 1. Tóm Tắt Mục Tiêu & Yêu Cầu Dự Án
-- Xây dựng phần mềm tra cứu tập trung: **Quy trình (SOP)**, **Quy chuẩn kỹ thuật**, **Hướng dẫn công việc** và **Biểu mẫu** cho tất cả các phòng ban.
-- **Nguồn dữ liệu:** Lưu trên **Google Sheets** để phòng ban dễ dàng thêm mới, sửa đổi không cần đụng đến code.
-- **Nơi lưu file:** File quy trình gốc (PDF, Word, Excel, CAD, Revit) lưu trên **Google Drive**. Khi nhân viên bấm nút thì **tải trực tiếp về máy** hoặc mở xem trước.
+## 📌 1. Tóm Tắt Mục Tiêu & Yêu Cầu Vừa Triển Khai
+1. **Phân Quyền Vai Trò (Role-based Access Control):**
+   - **Quản Trị Viên (`admin`):** Toàn quyền Thêm, Sửa, Xóa, Cài đặt kết nối hệ thống và **Phê duyệt phát hành chính thức** các quy trình dự thảo.
+   - **Ban Quản Lý (`bql` - Đổi từ Ban Giám Đốc):** Có quyền tra cứu, xem hồ sơ của toàn bộ 5 phòng ban (`*`), nhưng hoạt động ở chế độ **Chỉ xem (Read-only)**. Tuyệt đối ẩn toàn bộ các nút Thêm, Sửa, Xóa, Duyệt và Cài đặt.
+   - **Các bộ phận chuyên môn (`kythuat`, `sanxuat`, `kinhdoanh`, `hcns`):** Hoạt động ở chế độ **Chỉ xem (Read-only)** trong phạm vi các phòng ban được cấp quyền.
+
+2. **Vòng Đời Trạng Thái Tài Liệu (Document Status Lifecycle):**
+   - **Chính thức (`Chính thức`):** Quy trình đã được phê duyệt, áp dụng bắt buộc trong toàn bộ hoạt động.
+   - **Dự thảo (`Dự thảo`):** Bản thảo đang soạn thảo hoặc thử nghiệm. **Tự động ẩn khỏi tài khoản nhân viên & Ban Quản Lý** để tránh áp dụng sai. Chỉ Admin mới nhìn thấy kèm huy hiệu cảnh báo và nút "Duyệt phát hành ngay".
+   - **Tham khảo (`Tham khảo`):** Cẩm nang, sổ tay thông số kỹ thuật, catalogue vật tư để tra cứu đọc thêm.
 
 ---
 
-## 🛠️ 2. Những Việc Đã Hoàn Thành Hôm Nay
+## 🛠️ 2. Những Việc Đã Hoàn Thành
 
-### 1. Kiến trúc & Giao diện ứng dụng
-- **Giao diện hiện đại & Tinh gọn (Clean & Minimalist Modern UI):**
-  - **Tối giản hóa màn hình chính:** Đã loại bỏ hoàn toàn các bộ lọc trùng lặp (Dropdown thể loại, nút Yêu thích lặp lại, thanh pills phòng ban thừa).
-  - **Ẩn thanh 5 ô thống kê cồng kềnh:** Đưa số lượng tài liệu vào thanh trạng thái mini tinh gọn, tiết kiệm hơn 250px chiều cao màn hình.
-  - **Đưa tài liệu lên ngay tầm mắt:** Khi vừa mở trang, toàn bộ danh sách thẻ tài liệu hiển thị ngay lập tức mà người dùng không cần phải cuộn chuột qua hàng loạt banner hay khối thống kê rườm rà.
-  - **Gộp thanh điều khiển thành 1 hàng duy nhất:** Chọn Phòng ban, Đặt lại bộ lọc, Đếm số tài liệu, Sắp xếp (Sort), và Chuyển đổi Lưới/Bảng được tích hợp trên cùng 1 thanh công cụ trực quan.
-  - Hỗ trợ đầy đủ 2 giao diện **Sáng (Light Mode)** và **Tối (Dark Mode)**, tối ưu cho cả máy tính lẫn điện thoại di động.
+### 1. Cơ sở dữ liệu & Google Apps Script
+- `ProcessHub_Sample_Template.csv`: Bổ sung cột `Trạng thái`, chuyển "Ban Giám Đốc" thành "Ban Quản Lý", thêm ví dụ quy trình dự thảo (`QT-TK-02`) và tham khảo (`TK-VL-01`).
+- `ProcessHub_Version_History_Template.csv`: Đồng bộ 100% tên "Ban Quản Lý".
+- `Google_Apps_Script_ProcessHub.js`:
+  - Cập nhật danh mục `DEPARTMENTS` ("Ban Quản Lý") và `DOC_STATUSES` (`Chính thức`, `Dự thảo`, `Tham khảo`).
+  - Tự động tạo Dropdown xác thực dữ liệu cột *Trạng thái* ở Tab 1 `QuyTrinhHienHanh`.
+  - Khởi tạo Tab 4 `TaiKhoan` với tài khoản `admin` và `bql` phân biệt rõ ràng vai trò.
+  - Xử lý API Web App `doPost` hỗ trợ `action: 'approveDocument'` khi Admin duyệt trên web.
 
-### 2. Bộ máy kết nối Google Drive & Google Sheets
-- **Xử lý link Google Drive:** Tự động nhận dạng File ID từ link chia sẻ thông thường và chuyển thành link tải trực tiếp (`drive.usercontent.google.com/download?id=...&export=download`).
-- **Khung xem trước tài liệu:** Xem trước trực tiếp file trên Google Drive qua cửa sổ popup mà không cần mở tab mới.
-- **Đồng bộ Google Sheets không cần API Key:** Dùng cơ chế Google Visualization CSV, chỉ cần bật quyền xem công khai là phần mềm đọc được ngay.
-- **Bộ nhớ đệm (LocalStorage):** Tự động lưu cache để phần mềm mở tức thì ngay cả khi mạng lag.
+### 2. Tầng dữ liệu & Logic phân quyền (`js/data.js`)
+- `AuthStore.isAdmin(user)`: Khắc phục triệt để lỗi logic phân quyền; chỉ cấp quyền Admin cho tài khoản có vai trò `Admin`. Tài khoản `bql` dù có quyền xem `*` vẫn ở chế độ Chỉ xem.
+- `AuthStore.filterAllowedDocuments(docs, user)`: Tự động ẩn các tài liệu `Dự thảo` đối với tất cả người dùng không phải Admin.
+- `DataStore.approveDocument(code, approvedBy)`: Tự động chuyển trạng thái sang `Chính thức`, ghi nhật ký vào Lịch sử phiên bản và đồng bộ hai chiều lên Google Apps Script.
 
-### 3. File & Tài liệu đã tạo trong thư mục
-- `index.html`: Cấu trúc trang web chính.
-- `css/style.css`: Toàn bộ mã định dạng giao diện chuẩn responsive.
-- `js/data.js`: Bộ máy đồng bộ Google Sheets, xử lý link Drive và 12 dữ liệu mẫu của H-Design.
-- `js/app.js`: Xử lý tương tác tìm kiếm, bộ lọc, xem trước, popup cấu hình.
-- `ProcessHub_Sample_Template.csv`: File mẫu các cột dữ liệu để import vào Google Sheets.
-- `server.ps1`: Máy chủ PowerShell cục bộ phục vụ chạy thử nghiệm.
-- `README.md`: Hướng dẫn vận hành chi tiết.
+### 3. Giao diện & Trải nghiệm người dùng (`index.html`, `css/style.css`, `js/app.js`)
+- **Bộ lọc Trạng thái:** Dropdown lọc trạng thái kèm nút huy hiệu cảnh báo nhanh **"Chờ duyệt (X)"** chỉ hiển thị cho Admin.
+- **Huy hiệu trực quan:** Huy hiệu trạng thái màu sắc chuyên biệt (Xanh ngọc cho Chính thức, Vàng viền nhấp nháy cho Dự thảo, Xanh lam nhạt cho Tham khảo).
+- **Thao tác nhanh:** Thêm nút **Duyệt** trực tiếp trên thẻ Lưới và dòng Bảng cho Admin.
+- **Cửa sổ Xem trước:** Banner cảnh báo viền sọc nổi bật khi xem bản thảo, tích hợp nút *"Duyệt Phát Hành Ngay"*.
+- **Chuyển đổi tài khoản nhanh:** Bộ chip tài khoản cập nhật đầy đủ `admin`, `bql`, `kythuat`, `sanxuat`, `kinhdoanh`, `hcns` với nhãn rõ ràng.
 
 ---
 
-## 🚀 3. Kế Hoạch Làm Tiếp Cho Ngày Mai (Checklist)
+## 💻 3. Hướng Dẫn Kiểm Thử Nhanh
 
-Khi bắt đầu phiên làm việc ngày mai, bạn có thể triển khai ngay các bước sau:
-
-- [ ] **Bước 1: Tạo Google Sheets chính thức của công ty**
-  - Tạo file Google Sheets mới, import file `ProcessHub_Sample_Template.csv` vào.
-  - Phân quyền chia sẻ Google Sheets: *"Bất kỳ ai có đường liên kết đều có thể xem"*.
-- [ ] **Bước 2: Thu thập và điền link file Google Drive thực tế**
-  - Đưa các file quy trình của các phòng ban lên Google Drive, chuyển quyền xem sang công khai liên kết.
-  - Dán link vào cột `Link Google Drive` trong file Google Sheets.
-- [ ] **Bước 3: Kết nối Sheets vào phần mềm**
-  - Mở phần mềm -> Bấm nút **"Nguồn Sheets"** trên góc phải -> Dán link Google Sheets và bấm **"Lưu & Đồng bộ ngay"**.
-- [ ] **Bước 4 (Tùy chọn nâng cao): Đưa lên mạng nội bộ hoặc GitHub Pages**
-  - Triển khai lên **GitHub Pages** (hoặc hosting của công ty) để toàn bộ nhân viên có đường link web dùng chung trên máy tính & điện thoại.
-  - Thêm chức năng lọc nâng cao (ví dụ: lọc theo năm/quý ban hành, nút xuất file Excel danh sách tìm kiếm nếu công ty cần).
-
----
-
-## 💻 4. Lệnh Khởi Chạy Nhanh Cho Ngày Mai
-
-1. **Cách 1 (Nhanh nhất):**
-   - Nhấp đúp chuột trực tiếp vào file `index.html` trong thư mục `d:\GT_Huy\Solution by H-Design\ProcessHub\index.html`.
-
-2. **Cách 2 (Chạy qua Local Server PowerShell):**
-   - Mở PowerShell trong thư mục dự án và chạy:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File .\server.ps1
-     ```
-   - Truy cập trình duyệt: `http://localhost:8080`
+1. **Kiểm tra tài khoản Quản trị (`admin` / pass: `1612`):**
+   - Đăng nhập -> Thấy nút "Thêm mới", nút "Cài đặt", nút "Chờ duyệt (1)".
+   - Tài liệu `QT-TK-02` (Dự thảo) hiển thị với nút "Duyệt".
+   - Bấm "Duyệt" -> Xác nhận -> Tài liệu tự động chuyển sang "Chính thức", xuất hiện trong Lịch sử phiên bản.
+2. **Kiểm tra tài khoản Ban Quản Lý (`bql` / pass: `1612`):**
+   - Đăng nhập -> Xem được đầy đủ tài liệu của cả 5 phòng ban.
+   - Các nút Thêm mới, Sửa, Xóa, Duyệt, Cài đặt hoàn toàn bị ẩn.
+   - Tài liệu "Dự thảo" hoàn toàn bị ẩn, không gây nhiễu thao tác.
+3. **Kiểm tra tài khoản phòng ban (`kythuat` / pass: `1612`):**
+   - Chỉ xem tài liệu nội bộ Kỹ Thuật, chế độ chỉ xem.

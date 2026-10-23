@@ -12,7 +12,7 @@
 
 // Danh sách phòng ban và thể loại chuẩn của H-Design
 var DEPARTMENTS = [
-  "Ban Giám Đốc",
+  "Ban Quản Lý",
   "Bộ phận Kỹ Thuật",
   "Bộ phận Sản Xuất",
   "Bộ phận Kinh Doanh",
@@ -26,6 +26,12 @@ var CATEGORIES = [
   "Biểu mẫu",
   "Bản vẽ",
   "Chính sách"
+];
+
+var DOC_STATUSES = [
+  "Chính thức",
+  "Dự thảo",
+  "Tham khảo"
 ];
 
 var STATUSES = [
@@ -69,7 +75,7 @@ function setupProcessHubSheets() {
   }
 
   var headersMain = [
-    ["Mã tài liệu", "Tên tài liệu / Quy trình", "Phòng ban", "Phân loại", "Phiên bản", "Ngày ban hành", "Link Google Drive", "Mô tả tóm tắt", "Từ khóa tìm kiếm"]
+    ["Mã tài liệu", "Tên tài liệu / Quy trình", "Phòng ban", "Phân loại", "Trạng thái", "Phiên bản", "Ngày ban hành", "Link Google Drive", "Mô tả tóm tắt", "Từ khóa tìm kiếm"]
   ];
 
   sheetMain.clear();
@@ -89,38 +95,44 @@ function setupProcessHubSheets() {
 
   // Thêm dữ liệu mẫu Tab 1
   var sampleDataMain = [
-    ["QT-TK-01", "Quy trình thiết kế phương án kiến trúc & nội thất", "Bộ phận Kỹ Thuật", "Quy trình", "v3.2", "2026-10-10", "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt VR với CĐT.", "kiến trúc, concept, 3d, brief"],
-    ["TC-BV-02", "Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Tiêu chuẩn", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
-    ["HD-SX-01", "Hướng dẫn vận hành máy CNC, máy dán cạnh & kiểm soát chất lượng xưởng", "Bộ phận Sản Xuất", "Hướng dẫn", "v2.5", "2026-10-05", "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing", "Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra keo PUR và kiểm tra dao cắt CNC.", "sản xuất, xưởng, cnc, keo pur"],
-    ["TC-AT-01", "Tiêu chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Tiêu chuẩn", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
-    ["CS-GD-01", "Chính sách bảo mật thông tin nội bộ, quản lý dữ liệu & phân quyền", "Ban Giám Đốc", "Chính sách", "v1.2", "2026-06-30", "https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing", "Quy định phân quyền dữ liệu giữa các bộ phận và cam kết bảo mật NDA.", "bảo mật, chính sách, nda, giám đốc"]
+    ["QT-TK-01", "Quy trình thiết kế phương án kiến trúc & nội thất", "Bộ phận Kỹ Thuật", "Quy trình", "Chính thức", "v3.2", "2026-10-10", "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "Quy định các bước từ tiếp nhận brief khách hàng, lên concept 2D/3D, duyệt VR với CĐT.", "kiến trúc, concept, 3d, brief"],
+    ["TC-BV-02", "Tiêu chuẩn thể hiện hồ sơ bản vẽ kỹ thuật thi công (CAD & Revit)", "Bộ phận Kỹ Thuật", "Tiêu chuẩn", "Chính thức", "v2.0", "2026-09-25", "https://drive.google.com/file/d/1A2b3c4D5E6F7G8H9I0J_SampleStandardFile/view?usp=sharing", "Bộ tiêu chuẩn nét vẽ, tỷ lệ, Family Revit và tích hợp mã QR truy xuất bản vẽ.", "bản vẽ, cad, revit, ctb"],
+    ["HD-SX-01", "Hướng dẫn vận hành máy CNC, máy dán cạnh & kiểm soát chất lượng xưởng", "Bộ phận Sản Xuất", "Hướng dẫn", "Chính thức", "v2.5", "2026-10-05", "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing", "Chỉ dẫn chi tiết cách vận hành máy móc xưởng gỗ, kiểm tra keo PUR và kiểm tra dao cắt CNC.", "sản xuất, xưởng, cnc, keo pur"],
+    ["TC-AT-01", "Tiêu chuẩn an toàn lao động, vệ sinh công nghiệp & PCCC phân xưởng", "Bộ phận Sản Xuất", "Tiêu chuẩn", "Chính thức", "v3.0", "2026-07-20", "https://drive.google.com/file/d/1H_Sample_AnToanLaoDong_DriveFile/view?usp=sharing", "Tiêu chuẩn an toàn PCCC theo Nghị định 50/2024/NĐ-CP và hệ thống hút bụi trung tâm.", "an toàn, pccc, xưởng, bảo hộ"],
+    ["CS-QL-01", "Chính sách bảo mật thông tin nội bộ, quản lý dữ liệu & phân quyền", "Ban Quản Lý", "Chính sách", "Chính thức", "v1.2", "2026-06-30", "https://drive.google.com/file/d/1J_Sample_BaoMatThongTin_DriveFile/view?usp=sharing", "Quy định phân quyền dữ liệu giữa các bộ phận và cam kết bảo mật NDA.", "bảo mật, chính sách, nda, ban quản lý"],
+    ["QT-TK-02", "Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế", "Bộ phận Kỹ Thuật", "Quy trình", "Dự thảo", "v0.9", "2026-10-22", "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing", "Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ.", "ai, thiet ke, du thao, concept"],
+    ["TK-VL-01", "Cẩm nang tra cứu thông số kỹ thuật gỗ công nghiệp & phụ kiện nội thất 2026", "Bộ phận Sản Xuất", "Hướng dẫn", "Tham khảo", "v1.0", "2026-10-15", "https://drive.google.com/file/d/1C_Sample_GiamSatCongTruong_DriveFile/view?usp=sharing", "Tài liệu cẩm nang kỹ thuật tổng hợp quy cách ván MDF, HDF, MFC An Cường và catalog phụ kiện Hafele.", "cam nang, go, an cuong, tham khao"]
   ];
 
   sheetMain.getRange(2, 1, sampleDataMain.length, sampleDataMain[0].length).setValues(sampleDataMain);
 
-  // Tạo Dropdown chọn Phòng ban & Phân loại cho 500 dòng
+  // Tạo Dropdown chọn Phòng ban, Phân loại & Trạng thái cho 500 dòng
   var ruleDept = SpreadsheetApp.newDataValidation().requireValueInList(DEPARTMENTS, true).build();
   sheetMain.getRange("C2:C500").setDataValidation(ruleDept);
 
   var ruleCat = SpreadsheetApp.newDataValidation().requireValueInList(CATEGORIES, true).build();
   sheetMain.getRange("D2:D500").setDataValidation(ruleCat);
 
+  var ruleDocStatus = SpreadsheetApp.newDataValidation().requireValueInList(DOC_STATUSES, true).build();
+  sheetMain.getRange("E2:E500").setDataValidation(ruleDocStatus);
+
   // Kẻ viền và căn chỉnh Tab 1
   var bodyRangeMain = sheetMain.getRange(2, 1, sampleDataMain.length, headersMain[0].length);
   bodyRangeMain.setFontFamily('Plus Jakarta Sans')
                 .setVerticalAlignment('middle');
   sheetMain.getRange("A2:A500").setHorizontalAlignment('center');
-  sheetMain.getRange("E2:F500").setHorizontalAlignment('center');
+  sheetMain.getRange("E2:G500").setHorizontalAlignment('center');
 
   sheetMain.setColumnWidth(1, 110); // Mã
   sheetMain.setColumnWidth(2, 320); // Tên
   sheetMain.setColumnWidth(3, 170); // Phòng ban
   sheetMain.setColumnWidth(4, 130); // Phân loại
-  sheetMain.setColumnWidth(5, 95);  // Phiên bản
-  sheetMain.setColumnWidth(6, 120); // Ngày ban hành
-  sheetMain.setColumnWidth(7, 280); // Link Drive
-  sheetMain.setColumnWidth(8, 300); // Mô tả
-  sheetMain.setColumnWidth(9, 180); // Từ khóa
+  sheetMain.setColumnWidth(5, 115); // Trạng thái
+  sheetMain.setColumnWidth(6, 95);  // Phiên bản
+  sheetMain.setColumnWidth(7, 120); // Ngày ban hành
+  sheetMain.setColumnWidth(8, 280); // Link Drive
+  sheetMain.setColumnWidth(9, 300); // Mô tả
+  sheetMain.setColumnWidth(10, 180); // Từ khóa
 
   // --- TAB 2: LichSuPhienBan ---
   var sheetHistory = ss.getSheetByName('LichSuPhienBan');
@@ -242,11 +254,12 @@ function setupProcessHubSheets() {
   sheetUsers.setFrozenRows(1);
 
   var sampleUsersData = [
-    ["admin", "1612", "Ban Giám Đốc", "Ban Giám Đốc", "Admin", "*", "Toàn quyền quản trị & xem tất cả 5 bộ phận"],
-    ["kythuat", "1612", "Kỹ Sư Hoàng (Kỹ Thuật)", "Bộ phận Kỹ Thuật", "User", "Bộ phận Kỹ Thuật, Bộ phận Sản Xuất", "Xem hồ sơ Kỹ Thuật & Sản Xuất"],
-    ["sanxuat", "1612", "Quản Đốc Nam (Sản Xuất)", "Bộ phận Sản Xuất", "User", "Bộ phận Sản Xuất, Bộ phận Kỹ Thuật", "Xem hồ sơ Sản Xuất & Kỹ Thuật"],
-    ["kinhdoanh", "1612", "Sale Mai (Kinh Doanh)", "Bộ phận Kinh Doanh", "User", "Bộ phận Kinh Doanh, Bộ phận Kỹ Thuật", "Xem hồ sơ Kinh Doanh & Kỹ Thuật"],
-    ["hcns", "1612", "HR Lan (Hành Chính - NS)", "Hành Chính - Nhân Sự", "User", "Hành Chính - Nhân Sự", "Chỉ xem phòng Hành Chính - Nhân Sự"]
+    ["admin", "1612", "Quản Trị Viên (Admin)", "Ban Quản Lý", "Admin", "*", "Toàn quyền quản trị & duyệt phát hành"],
+    ["bql", "1612", "Ban Quản Lý", "Ban Quản Lý", "Ban Quản Lý", "*", "Xem tất cả 5 bộ phận (Chế độ Chỉ Xem - Read-only)"],
+    ["kythuat", "1612", "Kỹ Sư Hoàng (Kỹ Thuật)", "Bộ phận Kỹ Thuật", "User", "Bộ phận Kỹ Thuật", "Chỉ xem phòng Kỹ Thuật (Read-only)"],
+    ["sanxuat", "1612", "Quản Đốc Nam (Sản Xuất)", "Bộ phận Sản Xuất", "User", "Bộ phận Sản Xuất", "Chỉ xem phòng Sản Xuất (Read-only)"],
+    ["kinhdoanh", "1612", "Sale Mai (Kinh Doanh)", "Bộ phận Kinh Doanh", "User", "Bộ phận Kinh Doanh", "Chỉ xem phòng Kinh Doanh (Read-only)"],
+    ["hcns", "1612", "HR Lan (Hành Chính - NS)", "Hành Chính - Nhân Sự", "User", "Hành Chính - Nhân Sự", "Chỉ xem phòng Hành Chính - Nhân Sự (Read-only)"]
   ];
 
   sheetUsers.getRange(2, 1, sampleUsersData.length, sampleUsersData[0].length).setValues(sampleUsersData);
@@ -258,7 +271,7 @@ function setupProcessHubSheets() {
   var ruleDeptUsers = SpreadsheetApp.newDataValidation().requireValueInList(DEPARTMENTS, true).build();
   sheetUsers.getRange("D2:D100").setDataValidation(ruleDeptUsers);
 
-  var ruleRoleUsers = SpreadsheetApp.newDataValidation().requireValueInList(["Admin", "User"], true).build();
+  var ruleRoleUsers = SpreadsheetApp.newDataValidation().requireValueInList(["Admin", "Ban Quản Lý", "User"], true).build();
   sheetUsers.getRange("E2:E100").setDataValidation(ruleRoleUsers);
 
   sheetUsers.setColumnWidth(1, 150); // ID
@@ -471,13 +484,14 @@ function doGet(e) {
       var dataMain = sheetMain.getDataRange().getValues();
       var headers = (dataMain[0] || []).map(function(h) { return (h || '').toString().toLowerCase().trim(); });
 
-      var colCode = -1, colTitle = -1, colDept = -1, colCat = -1, colVer = -1, colDate = -1, colDrive = -1, colDesc = -1, colTags = -1;
+      var colCode = -1, colTitle = -1, colDept = -1, colCat = -1, colStatus = -1, colVer = -1, colDate = -1, colDrive = -1, colDesc = -1, colTags = -1;
       for (var c = 0; c < headers.length; c++) {
         var h = headers[c];
         if (colCode === -1 && (h.indexOf('mã') >= 0 || h.indexOf('code') >= 0)) colCode = c;
         else if (colTitle === -1 && (h.indexOf('tên') >= 0 || h.indexOf('tiêu đề') >= 0 || h.indexOf('title') >= 0 || h.indexOf('quy trình') >= 0)) colTitle = c;
         else if (colDept === -1 && (h.indexOf('phòng') >= 0 || h.indexOf('bộ phận') >= 0 || h.indexOf('dept') >= 0)) colDept = c;
         else if (colCat === -1 && (h.indexOf('loại') >= 0 || h.indexOf('phân loại') >= 0 || h.indexOf('thể loại') >= 0 || h.indexOf('cat') >= 0)) colCat = c;
+        else if (colStatus === -1 && (h.indexOf('trạng thái') >= 0 || h.indexOf('status') >= 0 || h.indexOf('tình trạng') >= 0)) colStatus = c;
         else if (colVer === -1 && (h.indexOf('phiên bản') >= 0 || h.indexOf('version') >= 0)) colVer = c;
         else if (colDate === -1 && (h.indexOf('ngày') >= 0 || h.indexOf('date') >= 0)) colDate = c;
         else if (colDrive === -1 && (h.indexOf('drive') >= 0 || h.indexOf('link') >= 0 || h.indexOf('url') >= 0)) colDrive = c;
@@ -490,11 +504,6 @@ function doGet(e) {
       if (colTitle === -1) colTitle = 1;
       if (colDept === -1) colDept = 2;
       if (colCat === -1) colCat = 3;
-      if (colVer === -1) colVer = 4;
-      if (colDate === -1) colDate = 5;
-      if (colDrive === -1) colDrive = 6;
-      if (colDesc === -1) colDesc = 7;
-      if (colTags === -1) colTags = 8;
 
       for (var i = 1; i < dataMain.length; i++) {
         var row = dataMain[i];
@@ -511,17 +520,20 @@ function doGet(e) {
 
         if (!title) continue;
 
+        var rawDocStatus = (colStatus >= 0 && row[colStatus]) ? row[colStatus].toString().trim() : 'Chính thức';
+
         documents.push({
           id: 'sheet-' + i + '-' + (code || ('doc-' + i)).replace(/[^a-zA-Z0-9]/g, ''),
           code: code || ('DOC-' + i),
           title: title,
           department: (row[colDept] || 'Bộ phận Sản Xuất').toString().trim(),
           category: (row[colCat] || 'Hướng dẫn').toString().trim(),
-          version: (row[colVer] || 'v1.0').toString().trim(),
-          updatedAt: formatDateIso(row[colDate]),
-          driveUrl: (row[colDrive] || '').toString().trim(),
-          description: (row[colDesc] || '').toString().trim(),
-          tags: (row[colTags] || '').toString().split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(Boolean)
+          status: rawDocStatus || 'Chính thức',
+          version: (colVer >= 0 && row[colVer] ? row[colVer] : 'v1.0').toString().trim(),
+          updatedAt: colDate >= 0 ? formatDateIso(row[colDate]) : todayStr,
+          driveUrl: (colDrive >= 0 && row[colDrive] ? row[colDrive] : '').toString().trim(),
+          description: (colDesc >= 0 && row[colDesc] ? row[colDesc] : '').toString().trim(),
+          tags: (colTags >= 0 && row[colTags] ? row[colTags] : '').toString().split(',').map(function(t) { return t.trim().toLowerCase(); }).filter(Boolean)
         });
       }
     }
@@ -946,12 +958,76 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // XỬ LÝ 4: THÊM MỚI QUY TRÌNH VÀO SHEET (Mặc định)
+    // XỬ LÝ 4: DUYỆT PHÁT HÀNH QUY TRÌNH (ADMIN)
+    if (action === 'approveDocument') {
+      var lastRowApprove = sheetMain.getLastRow();
+      var foundRowApprove = -1;
+      var targetCodeApprove = (doc.code || '').trim().toUpperCase();
+
+      if (lastRowApprove > 1) {
+        var codesApprove = sheetMain.getRange(2, 1, lastRowApprove - 1, 1).getValues();
+        for (var ap = 0; ap < codesApprove.length; ap++) {
+          if ((codesApprove[ap][0] || '').toString().trim().toUpperCase() === targetCodeApprove) {
+            foundRowApprove = ap + 2;
+            break;
+          }
+        }
+      }
+
+      if (foundRowApprove > 0) {
+        // Cập nhật trạng thái sang Chính thức và ngày hiệu lực
+        var headersArr = sheetMain.getRange(1, 1, 1, sheetMain.getLastColumn()).getValues()[0];
+        var colStatusIdx = -1;
+        var colDateIdx = -1;
+        for (var cs = 0; cs < headersArr.length; cs++) {
+          var hName = (headersArr[cs] || '').toString().toLowerCase();
+          if (colStatusIdx === -1 && (hName.indexOf('trạng thái') >= 0 || hName.indexOf('status') >= 0)) {
+            colStatusIdx = cs + 1;
+          }
+          if (colDateIdx === -1 && (hName.indexOf('ngày') >= 0 || hName.indexOf('date') >= 0)) {
+            colDateIdx = cs + 1;
+          }
+        }
+
+        if (colStatusIdx > 0) {
+          sheetMain.getRange(foundRowApprove, colStatusIdx).setValue("Chính thức");
+        }
+        if (colDateIdx > 0 && doc.updatedAt) {
+          sheetMain.getRange(foundRowApprove, colDateIdx).setValue(doc.updatedAt);
+        }
+        
+        // Thêm vào tab LichSuPhienBan
+        var sheetHistory = ss.getSheetByName('LichSuPhienBan') || ss.insertSheet('LichSuPhienBan', 1);
+        if (sheetHistory.getLastRow() < 1) {
+          sheetHistory.appendRow(["Mã tài liệu", "Phiên bản", "Ngày ban hành", "Ngày hết hiệu lực", "Trạng thái", "Người cập nhật / Phê duyệt", "Lý do thay đổi / Nội dung cập nhật", "Link Google Drive bản cũ", "Ghi chú"]);
+        }
+        sheetHistory.appendRow([
+          targetCodeApprove,
+          doc.version || "v1.0",
+          doc.updatedAt || todayStr,
+          "Đang áp dụng",
+          "Đang hiệu lực",
+          payload.approvedBy || "Ban Quản Lý",
+          "Phê duyệt & ban hành chính thức có hiệu lực áp dụng.",
+          doc.driveUrl || "",
+          "Duyệt trực tiếp từ ProcessHub Web App"
+        ]);
+
+        return ContentService.createTextOutput(JSON.stringify({
+          status: 'success',
+          message: 'Đã duyệt và phát hành chính thức quy trình [' + targetCodeApprove + ']!',
+          document: doc
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // XỬ LÝ 5: THÊM MỚI QUY TRÌNH VÀO SHEET (Mặc định)
     var newRow = [
       doc.code || '',
       doc.title || '',
       doc.department || 'Bộ phận Kỹ Thuật',
       doc.category || 'Quy trình',
+      doc.status || 'Chính thức',
       doc.version || 'v1.0',
       doc.updatedAt || todayStr,
       doc.driveUrl || '',
