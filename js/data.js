@@ -191,19 +191,6 @@ const DEFAULT_MOCK_DOCUMENTS = [
     tags: ["kinh doanh", "khảo sát", "brief", "khách hàng", "tư vấn"]
   },
   {
-    id: "doc-draft-ai",
-    code: "QT-TK-02",
-    title: "Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế",
-    department: "Bộ phận Kỹ Thuật",
-    category: "Quy trình",
-    status: "Dự thảo",
-    version: "v0.9",
-    updatedAt: "2026-10-22",
-    driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
-    description: "Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ trước khi chuyển sang giai đoạn dựng hình chi tiết.",
-    tags: ["ai", "thiet ke", "du thao", "concept", "thử nghiệm"]
-  },
-  {
     id: "doc-ref-wood",
     code: "TK-VL-01",
     title: "Cẩm nang tra cứu thông số kỹ thuật gỗ công nghiệp & phụ kiện nội thất 2026",
@@ -1220,24 +1207,14 @@ const DataStore = {
             if (!d.status) d.status = 'Chính thức';
           });
 
-          // Loại bỏ hoàn toàn tài liệu mẫu BV-TK-01 nếu còn lưu trong cache
-          parsed = parsed.filter(d => (d.code || '').trim().toUpperCase() !== 'BV-TK-01');
-
-          // Đảm bảo có mẫu Dự thảo & Tham khảo để người dùng kiểm thử
-          if (!parsed.some(d => d.code === 'QT-TK-02')) {
-            parsed.push({
-              id: "doc-draft-ai",
-              code: "QT-TK-02",
-              title: "Quy trình ứng dụng Trí tuệ Nhân tạo (AI) trong phân tích & xuất phương án thiết kế",
-              department: "Bộ phận Kỹ Thuật",
-              category: "Quy trình",
-              status: "Dự thảo",
-              version: "v0.9",
-              updatedAt: "2026-10-22",
-              driveUrl: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing",
-              description: "Bản thảo thử nghiệm quy trình dùng AI tạo render sơ phác và kiểm tra đối soát quy chuẩn hồ sơ trước khi chuyển sang giai đoạn dựng hình chi tiết.",
-              tags: ["ai", "thiet ke", "du thao", "concept", "thử nghiệm"]
-            });
+          // Loại bỏ tài liệu mẫu BV-TK-01 và QT-TK-02 nếu còn lưu trong cache cũ
+          const originalLength = parsed.length;
+          parsed = parsed.filter(d => {
+            const code = (d.code || '').trim().toUpperCase();
+            return code !== 'BV-TK-01' && code !== 'QT-TK-02' && d.id !== 'doc-draft-ai';
+          });
+          if (parsed.length !== originalLength) {
+            localStorage.setItem(STORAGE_KEYS.DOCUMENTS_CACHE, JSON.stringify(parsed));
           }
 
           return parsed;
