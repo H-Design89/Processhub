@@ -313,12 +313,12 @@ function archiveAndUpgradeVersion() {
     return;
   }
 
-  // Đọc thông tin bản hiện tại
+  // Đọc thông tin bản hiện tại (Chuẩn 10 cột: Mã=1, Tên=2, PB=3, Phân loại=4, Trạng thái=5, Phiên bản=6, Ngày=7, Link=8)
   var docCode = sheetMain.getRange(row, 1).getValue();
   var docTitle = sheetMain.getRange(row, 2).getValue();
-  var oldVersion = sheetMain.getRange(row, 5).getValue();
-  var oldReleaseDate = sheetMain.getRange(row, 6).getValue();
-  var oldDriveUrl = sheetMain.getRange(row, 7).getValue();
+  var oldVersion = sheetMain.getRange(row, 6).getValue();
+  var oldReleaseDate = sheetMain.getRange(row, 7).getValue();
+  var oldDriveUrl = sheetMain.getRange(row, 8).getValue();
 
   if (!docCode || !docTitle) {
     ui.alert('Lỗi', 'Dòng được chọn không có Mã tài liệu hoặc Tên quy trình hợp lệ!', ui.ButtonSet.OK);
@@ -388,10 +388,10 @@ function archiveAndUpgradeVersion() {
 
   sheetHistory.appendRow(historyRow);
 
-  // CẬP NHẬT LẠI DÒNG TRÊN TAB QUYTRINHIENHANH
-  sheetMain.getRange(row, 5).setValue(newVersion);
-  sheetMain.getRange(row, 6).setValue(todayStr);
-  sheetMain.getRange(row, 7).setValue(newDriveUrl);
+  // CẬP NHẬT LẠI DÒNG TRÊN TAB QUYTRINHIENHANH (Cột 6: Phiên bản, Cột 7: Ngày, Cột 8: Link Drive)
+  sheetMain.getRange(row, 6).setValue(newVersion);
+  sheetMain.getRange(row, 7).setValue(todayStr);
+  sheetMain.getRange(row, 8).setValue(newDriveUrl);
 
   ui.alert(
     'Nâng cấp thành công! 🚀',
@@ -804,12 +804,13 @@ function doPost(e) {
       }
 
       if (foundRow > 0) {
-        // Đọc giá trị cũ trước khi ghi đè
-        var oldValues = sheetMain.getRange(foundRow, 1, 1, 9).getValues()[0];
+        // Đọc giá trị cũ trước khi ghi đè (Đọc đủ 10 cột)
+        var oldValues = sheetMain.getRange(foundRow, 1, 1, 10).getValues()[0];
         var oldCode = oldValues[0] || targetCode;
-        var oldVer = oldValues[4] || 'v1.0';
-        var oldDate = oldValues[5] || todayStr;
-        var oldDriveUrl = oldValues[6] || '';
+        var oldStatus = oldValues[4] || 'Chính thức';
+        var oldVer = oldValues[5] || 'v1.0';
+        var oldDate = oldValues[6] || todayStr;
+        var oldDriveUrl = oldValues[7] || '';
 
         // Tự động lưu bản cũ vào tab LichSuPhienBan nếu link hoặc phiên bản thay đổi
         if (oldDriveUrl !== doc.driveUrl || oldVer !== doc.version) {
@@ -830,19 +831,20 @@ function doPost(e) {
           ]);
         }
 
-        // Cập nhật dòng hiện hành
+        // Cập nhật dòng hiện hành (Chuẩn 10 cột có Trạng thái ở cột 5)
         var updatedRow = [
           doc.code || oldCode,
           doc.title || oldValues[1],
           doc.department || oldValues[2],
           doc.category || oldValues[3],
+          doc.status || oldStatus || 'Chính thức',
           doc.version || oldVer,
           doc.updatedAt || todayStr,
           doc.driveUrl || '',
           doc.description || '',
           tagsStr
         ];
-        sheetMain.getRange(foundRow, 1, 1, 9).setValues([updatedRow]);
+        sheetMain.getRange(foundRow, 1, 1, 10).setValues([updatedRow]);
 
         return ContentService.createTextOutput(JSON.stringify({
           status: 'success',
@@ -872,11 +874,11 @@ function doPost(e) {
       }
 
       if (foundRowDel > 0) {
-        var oldDelValues = sheetMain.getRange(foundRowDel, 1, 1, 9).getValues()[0];
+        var oldDelValues = sheetMain.getRange(foundRowDel, 1, 1, 10).getValues()[0];
         var dCode = oldDelValues[0] || targetCodeDel;
-        var dVer = oldDelValues[4] || 'v1.0';
-        var dDate = oldDelValues[5] || todayStr;
-        var dDriveUrl = oldDelValues[6] || '';
+        var dVer = oldDelValues[5] || 'v1.0';
+        var dDate = oldDelValues[6] || todayStr;
+        var dDriveUrl = oldDelValues[7] || '';
 
         // Tự động lưu 1 dòng vào LichSuPhienBan để lưu vết kiểm toán và đối soát
         var sheetHistDel = ss.getSheetByName('LichSuPhienBan') || ss.insertSheet('LichSuPhienBan', 1);

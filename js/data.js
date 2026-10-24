@@ -864,6 +864,77 @@ function parseAccountsCsv(rows) {
 }
 
 /**
+ * Tự động sửa chữa và chuẩn hóa các tài liệu bị lệch cột dữ liệu từ Google Sheets
+ * Đặc biệt khi cột Trạng thái bị bỏ trống hoặc cột Drive URL bị trôi sang cột Ngày cập nhật
+ */
+function sanitizeDocumentFields(doc) {
+  if (!doc || typeof doc !== 'object') return doc;
+
+  const isUrl = str => typeof str === 'string' && (/^https?:\/\//i.test(str.trim()) || str.includes('drive.google.com'));
+
+  let rawUpdated = (doc.updatedAt || '').toString().trim();
+  let rawDrive = (doc.driveUrl || '').toString().trim();
+  let rawVer = (doc.version || '').toString().trim();
+  let rawStatus = (doc.status || '').toString().trim();
+  let rawDesc = (doc.description || '').toString().trim();
+
+  // Phát hiện cột bị lệch: Link Google Drive bị trôi vào cột Ngày ban hành (updatedAt)
+  if (isUrl(rawUpdated)) {
+    const realDriveUrl = rawUpdated;
+
+    // Nếu driveUrl chứa nội dung mô tả thay vì link
+    if (rawDrive && !isUrl(rawDrive)) {
+      doc.description = rawDesc ? `${rawDrive}. ${rawDesc}` : rawDrive;
+    }
+    doc.driveUrl = realDriveUrl;
+
+    // Nếu version chứa chuỗi ngày tháng (VD: Sat Oct 24 2026... hoặc 2026-10-24)
+    const parsedDate = new Date(rawVer);
+    if (!isNaN(parsedDate.getTime()) && (rawVer.includes('202') || rawVer.includes('GMT') || rawVer.includes('-') || rawVer.includes('/'))) {
+      const day = String(parsedDate.getDate()).padStart(2, '0');
+      const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+      const year = parsedDate.getFullYear();
+      doc.updatedAt = `${year}-${month}-${day}`;
+    } else {
+      doc.updatedAt = new Date().toISOString().slice(0, 10);
+    }
+
+    // Nếu status chứa số phiên bản (VD: "v1.0", "1.0")
+    if (/^v?\d+(\.\d+)?$/i.test(rawStatus)) {
+      doc.version = rawStatus.startsWith('v') ? rawStatus : `v${rawStatus}`;
+      doc.status = 'Chính thức';
+    } else {
+      doc.version = 'v1.0';
+      doc.status = rawStatus || 'Chính thức';
+    }
+  } else if (!isUrl(rawDrive) && isUrl(rawDesc)) {
+    doc.driveUrl = rawDesc;
+    doc.description = rawDrive;
+  }
+
+  // Chuẩn hóa trạng thái
+  if (!doc.status || !['Chính thức', 'Dự thảo', 'Tham khảo'].includes(doc.status)) {
+    if (doc.status === 'v1.0' || doc.status === 'v2.0' || !doc.status) {
+      doc.status = 'Chính thức';
+    }
+  }
+
+  // Chuẩn hóa phiên bản
+  if (!doc.version || doc.version === 'undefined') {
+    doc.version = 'v1.0';
+  } else if (/^\d+(\.\d+)?$/.test(doc.version)) {
+    doc.version = `v${doc.version}`;
+  }
+
+  // Chuẩn hóa tên bộ phận và thể loại
+  if (doc.department === 'Ban Giám Đốc') doc.department = 'Ban Quản Lý';
+  if (doc.department === 'Phòng Thiết Kế') doc.department = 'Bộ phận Kỹ Thuật';
+  if (doc.category === 'Quy chuẩn') doc.category = 'Tiêu chuẩn';
+
+  return doc;
+}
+
+/**
  * Normalize and map CSV headers flexibly (supports various Vietnamese and English column names)
  */
 function mapHeaderIndex(headers) {
@@ -959,7 +1030,7 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
       console.log(`Đã đồng bộ ${result.users.length} tài khoản từ Google Sheets (Tab TaiKhoan)`);
     }
 
-    return result.documents || [];
+    return (result.documents || []).map(sanitizeDocumentFields);
   }
 
   // Trường hợp chuẩn: Google Visualization API CSV Export URL
@@ -1087,7 +1158,7 @@ async function fetchGoogleSheetData(sheetId, tabName = '') {
     });
   }
 
-  return documents;
+  return documents.map(sanitizeDocumentFields);
 }
 
 /**
@@ -1207,15 +1278,16 @@ const DataStore = {
             if (!d.status) d.status = 'Chính thức';
           });
 
+          // Tự động chuẩn hóa và sửa lỗi lệch cột (nếu có)
+          parsed = parsed.map(sanitizeDocumentFields);
+
           // Loại bỏ tài liệu mẫu BV-TK-01 và QT-TK-02 nếu còn lưu trong cache cũ
-          const originalLength = parsed.length;
           parsed = parsed.filter(d => {
             const code = (d.code || '').trim().toUpperCase();
             return code !== 'BV-TK-01' && code !== 'QT-TK-02' && d.id !== 'doc-draft-ai';
           });
-          if (parsed.length !== originalLength) {
-            localStorage.setItem(STORAGE_KEYS.DOCUMENTS_CACHE, JSON.stringify(parsed));
-          }
+          
+          localStorage.setItem(STORAGE_KEYS.DOCUMENTS_CACHE, JSON.stringify(parsed));
 
           return parsed;
         }
